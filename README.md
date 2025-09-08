@@ -5,6 +5,7 @@
 **Reltio MCP Server** is a lightweight, plugin-based **Model Context Protocol (MCP)** server designed to perform advanced entity matching with language models in Reltio environments.
 
 ---
+**DISCLAIMER:** By entering in your credentials and consuming the Reltio MCP Server – Developer Edition, you may be connecting to the Reltio Platform via API calls. Any and all API calls will be counted against the API call entitlements set out in your SaaS Subscription Agreement (the "Agreement") with Reltio. API calls in excess of those entitlements, including any API calls made while consuming the server, could result in Overages, as set out in the Agreement. 
 
 ## Table of Contents
 - [Available Tools](#available-tools)
