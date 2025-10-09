@@ -104,7 +104,7 @@ async def search_entities(filter: str = "", entity_type: str = "",
             entity_ids = [entity.get("uri", "") for entity in result]
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"search_entities_tool : Successfully searched for entities: {entity_id_label_pairs} with entity_type {entity_type}"
+                description=f"search_entities_tool : Successfully searched for entities: {entity_ids} with entity_type {entity_type}"
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for search_entities_tool: {str(log_error)}")
