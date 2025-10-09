@@ -55,6 +55,12 @@ def extract_entity_id(uri: str):
         return "N/A"
     return uri.split("/")[-1]
 
+def extract_change_request_id(uri: str):
+    """Extract change request ID from URI"""
+    if not uri:
+        return None
+    return uri.split("/")[-1]
+
 def extract_relation_id(uri: str):
     """Extract relation ID from URI"""
     if not uri:

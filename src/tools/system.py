@@ -1,4 +1,5 @@
 import logging
+import time
 
 from src.env import RELTIO_SERVER_NAME
 from src.util.api import create_error_response
@@ -203,3 +204,23 @@ async def list_capabilities() -> dict:
             "SERVER_ERROR",
             "An unexpected error occurred while listing capabilities"
         )
+
+
+async def health_check() -> dict:
+    """Check if the MCP server is healthy
+    
+    Returns:
+        A dictionary containing the health status with 'status' and 'message' keys
+    
+    Raises:
+        Exception: If there's an error checking the server health
+    """
+    try:
+        return {
+            "status": "ok",
+            "message": "MCP server is running",
+            "timestamp": int(time.time() * 1000)
+        }
+    except Exception as e:
+        logger.error(f"Error in health_check: {str(e)}")
+        return create_error_response("ERROR", str(e))

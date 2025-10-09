@@ -7,6 +7,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 import yaml
+import time
 from src.constants import MAX_RESULTS_LIMIT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
@@ -182,4 +183,116 @@ async def get_merge_activities(
         return create_error_response(
             "SERVER_ERROR",
             "An unexpected error occurred while retrieving merge activities"
+        )
+
+
+async def check_user_activity(username: str, days_back: int = 7, tenant_id: str = RELTIO_TENANT) -> dict:
+    """Check if a user has been active in the system within a specified number of days
+    
+    Args:
+        username (str): Username to check for activity
+        days_back (int): Number of days to look back for activity. Defaults to 7 days.
+        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
+    
+    Returns:
+        A dictionary containing activity status and details
+    
+    Raises:
+        Exception: If there's an error checking user activity
+    """
+    try:
+        # Calculate timestamp for days_back (Unix timestamp in milliseconds)
+        current_time = int(time.time() * 1000)  # Current time in milliseconds
+        days_back_ms = days_back * 24 * 60 * 60 * 1000  # Convert days to milliseconds
+        timestamp_threshold = current_time - days_back_ms
+        
+        # Build the complex filter for user activities
+        activity_types = [
+            "startsWith(label, 'USER_LOGIN')",
+            "startsWith(label, 'COMMENT_ADDED')",
+            "startsWith(label, 'COMMENT_DELETED')",
+            "startsWith(label, 'COMMENT_UPDATED')",
+            "equals(items.data.type, NOT_MATCHES_SET)",
+            "equals(items.data.type, NOT_MATCHES_RESET)",
+            "equals(items.data.type, POTENTIAL_MATCHES_FOUND)",
+            "equals(items.data.type, POTENTIAL_MATCHES_REMOVED)",
+            "equals(items.data.type, ENTITY_CREATED)",
+            "equals(items.data.type, ENTITIES_MERGED_MANUALLY)",
+            "equals(items.data.type, ENTITY_REMOVED)",
+            "equals(items.data.type, ENTITIES_SPLITTED)",
+            "equals(items.data.type, ENTITY_CHANGED)",
+            "startsWith(label, 'USER_PROFILE_VIEW')",
+            "equals(items.data.type, RELATIONSHIP_CREATED)",
+            "equals(items.data.type, RELATIONSHIP_REMOVED)",
+            "equals(items.data.type, RELATIONSHIP_CHANGED)",
+            "startsWith(label, 'USER_SEARCH')"
+        ]
+        
+        # Combine all activity filters with OR
+        activity_filter = " or ".join(activity_types)
+        
+        # Build complete filter
+        complete_filter = (
+            f"(equals(user, '{username}')) and "
+            f"({activity_filter}) and "
+            f"(gte(timestamp, {timestamp_threshold})) and "
+            f"(not equals(user, 'collaboration-service'))"
+        )
+        
+        # Construct URL with filter parameters
+        base_url = get_reltio_url("activities", "api", tenant_id)
+        params = {
+            "filter": complete_filter,
+            "max": 1,
+            "offset": 0
+        }
+        
+        try:
+            headers = get_reltio_headers()
+            headers['Content-Type'] = 'application/json'
+            validate_connection_security(base_url, headers)
+        except Exception as e:
+            logger.error(f"Authentication or security error: {str(e)}")
+            return create_error_response(
+                "AUTHENTICATION_ERROR",
+                "Failed to authenticate with Reltio API"
+            )
+        
+        try:
+            activities_response = http_request(base_url, params=params, headers=headers)
+        except Exception as e:
+            logger.error(f"API request error: {str(e)}")
+            return create_error_response(
+                "API_REQUEST_ERROR",
+                f"Failed to retrieve user activities: {str(e)}"
+            )
+        
+        # Determine if user is active based on response
+        is_active = len(activities_response) > 0
+        
+        # Build response
+        result = {
+            "username": username,
+            "days_checked": days_back,
+            "timestamp_threshold": timestamp_threshold,
+            "is_active": is_active,
+            "activity_found": len(activities_response),
+            "last_activity": activities_response[0] if activities_response else None
+        }
+        
+        try:
+            await ActivityLog.execute_and_log_activity(
+                tenant_id=tenant_id,
+                description=f"check_user_activity_tool : MCP server checked activity for user {username} (active: {is_active})"
+            )
+        except Exception as log_error:
+            logger.error(f"Activity logging failed for check_user_activity: {str(log_error)}")
+        
+        return yaml.dump(result, sort_keys=False)
+        
+    except Exception as e:
+        logger.error(f"Error in check_user_activity: {str(e)}")
+        return create_error_response(
+            "INTERNAL_SERVER_ERROR",
+            f"An error occurred while checking user activity: {str(e)}"
         ) 

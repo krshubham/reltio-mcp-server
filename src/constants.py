@@ -12,6 +12,7 @@ LONG_OPERATION_TIMEOUT = 120  # seconds
 REQUIRE_TLS = True  # Require HTTPS for all connections
 ALLOWED_ORIGINS = ["https://app.reltio.com", "https://api.reltio.com"]  # Allowed origins
 HEADER_SOURCE_TAG = "Reltio-Open-MCP-Server"
+RELEVANCE_SCORE_NOT_AVAILABLE = "relevance score not available"
 
 # Error code definitions
 ERROR_CODES = {
