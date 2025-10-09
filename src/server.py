@@ -74,7 +74,7 @@ mcp = FastMCP(RELTIO_SERVER_NAME)
 # Register tools with the MCP server
 @mcp.tool()
 async def search_entities_tool(filter: str, entity_type: str, 
-                          tenant_id: str = RELTIO_TENANT, max_results: int = 10, sort: str = "", order: str = "asc", select: str = "uri,label", options: str = "ovOnly", activeness: str = "active", offset: int = 0, trace: bool = False) -> dict:
+                          tenant_id: str = RELTIO_TENANT, max_results: int = 10, sort: str = "", order: str = "asc", select: str = "uri,label", options: str = "ovOnly", activeness: str = "active", offset: int = 0) -> dict:
     """Search for entities matching the filter criteria
          
         Args:
