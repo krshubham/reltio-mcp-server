@@ -271,26 +271,6 @@ async def update_entity_attributes_tool(entity_id: str, updates: List[Dict[str, 
     """
     return await update_entity_attributes(entity_id, updates, tenant_id)
 
-@mcp.tool()
-async def get_entity_matches_tool(entity_id: str, tenant_id: str = RELTIO_TENANT, max_results: int = 25) -> dict:
-    """Find potential matches for a specific entity with detailed comparisons
-    
-    Args:
-        entity_id (str): Entity ID to find matches for
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-        max_results (int): Maximum number of results to return. Default to 25
-    
-    Returns:
-        A dictionary containing the source entity and potential matches
-    
-    Raises:
-        Exception: If there's an error getting the potential matches for an entity
-    
-    Examples:
-        # Find potential matches for an entity
-        get_entity_matches("entity_id", "tenant_id", 10)
-    """
-    return await get_entity_matches(entity_id, tenant_id, max_results)
 
 @mcp.tool()
 async def get_entity_match_history_tool(entity_id: str, tenant_id: str = RELTIO_TENANT) -> dict:
@@ -332,106 +312,6 @@ async def get_relation_tool(relation_id: str, tenant_id: str = RELTIO_TENANT) ->
     """
     return await get_relation_details(relation_id, tenant_id)
 
-@mcp.tool()
-async def find_entities_by_match_score_tool(start_match_score: int = 0, end_match_score: int = 100, entity_type: str = "Individual", 
-                                           tenant_id: str = RELTIO_TENANT, max_results: int = 10, offset: int = 0) -> dict:
-    """Find all entities by match score range
-    
-    Args:
-        start_match_score (int): Minimum match score to filter matches. Default to 0.
-        end_match_score (int): Maximum match score to filter matches. Default to 100.
-        entity_type (str): Entity type to filter by. Default to 'Individual'.
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-        max_results (int): Maximum number of results to return. Default to 10, and is capped at 10.
-        offset (int): Starting index for paginated results. Use 0 for the first page. For subsequent pages, increment offset by the number of results returned in the previous call (e.g., if you got 3 results, next offset should be 3).
-    
-    Returns:
-        A dictionary containing the search results
-    
-    Raises:
-        Exception: If there's an error getting the matches
-    
-    Examples:
-        # Find matches with a specific match score range
-        find_matches_by_match_score(0, 100, "Individual", "tenant_id", 10)
-
-        # Find matches with a different match score range
-        find_matches_by_match_score(50, 80, "Organization", "tenant_id", 5)
-    """
-    return await find_matches_by_match_score(start_match_score, end_match_score, entity_type, tenant_id, min(max_results, 10), offset)
-
-@mcp.tool()
-async def find_entities_by_confidence_tool(confidence_level: str = "Low confidence", entity_type: str = "Individual",
-                                            tenant_id: str = RELTIO_TENANT, max_results: int = 10, offset: int = 0) -> dict:
-    """Find all potential matches by confidence level
-    
-    Args:
-        confidence_level (str): Confidence level for matches (e.g., 'Strong matches', 'Medium confidence', 'Low confidence', 'High confidence', 'Super strong matches'). Default to 'Low confidence'.
-        entity_type (str): Entity type to filter by. Default to 'Individual'.
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-        max_results (int): Maximum number of results to return. Default to 10, and is capped at 10.
-        offset (int): Starting index for paginated results. Use 0 for the first page. For subsequent pages, increment offset by the number of results returned in the previous call (e.g., if you got 3 results, next offset should be 3).
-    
-    Returns:
-        A dictionary containing the search results
-
-    Raises:
-        Exception: If there's an error getting the matches
-    
-    Examples:
-        # Find matches with a specific confidence level
-        find_matches_by_confidence("Low confidence", "Individual", "tenant_id", 10)
-
-        # Find matches with a different confidence level
-        find_matches_by_confidence("High confidence", "Organization", "tenant_id", 5)
-    """
-    return await find_matches_by_confidence(confidence_level, entity_type, tenant_id, min(max_results, 10), offset)
-
-@mcp.tool()
-async def get_total_matches_tool(min_matches: int = 0, tenant_id: str = RELTIO_TENANT) -> dict:
-    """Get the total count of potential matches in the tenant
-    
-    Args:
-        min_matches (int): Minimum number of matches to filter by. Returns total count of entities with greater than this many matches. Default to 0.
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-    
-    Returns:
-        A dictionary containing the total count of potential matches
-    
-    Raises:
-        Exception: If there's an error getting the total matches count
-    
-    Examples:
-        # Get total count of all entities with potential matches
-        get_total_matches(0, "tenant_id")
-        
-        # Get total count of entities with more than 5 potential matches
-        get_total_matches(5, "tenant_id")
-    """
-    return await get_total_matches(min_matches, tenant_id)
-
-@mcp.tool()
-async def get_total_matches_by_entity_type_tool(min_matches: int = 0, tenant_id: str = RELTIO_TENANT) -> dict:
-    """Get the facet counts of potential matches by entity type
-    
-    Args:
-        min_matches (int): Minimum number of matches to filter by. Returns facet counts of entities with greater than this many matches. Default to 0.
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-    
-    Returns:
-        A dictionary containing the facet counts of potential matches by entity type
-    
-    Raises:
-        Exception: If there's an error getting the match facets
-    
-    Examples:
-        # Get facet counts of all entities with potential matches by entity type
-        get_total_matches_by_entity_type(0, "tenant_id")
-        
-        # Get facet counts of entities with more than 5 potential matches by entity type
-        get_total_matches_by_entity_type(5, "tenant_id")
-    """
-    return await get_total_matches_by_entity_type(min_matches, tenant_id)
 
 
 @mcp.tool()
@@ -920,53 +800,6 @@ async def capabilities_tool() -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-@mcp.tool()
-async def unmerge_entity_by_contributor_tool(origin_entity_id: str, contributor_entity_id: str, tenant_id: str = RELTIO_TENANT) -> dict:
-    """Unmerge a contributor entity from a merged entity, keeping any profiles merged beneath it intact.
-    
-    Args:
-        origin_entity_id (str): The ID of the origin entity (the merged entity)
-        contributor_entity_id (str): The ID of the contributor entity to unmerge from the origin entity
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-    
-    Returns:
-        A dictionary containing the result of the unmerge operation with 'a' (modified origin) and 'b' (spawn) entities
-    
-    Raises:
-        Exception: If there's an error during the unmerge operation
-    
-    Examples:
-        # Unmerge a contributor entity from a merged entity
-        unmerge_entity_by_contributor_tool("entity1", "entity2", "tenant_id")
-        
-        # Unmerge using entity prefixes
-        unmerge_entity_by_contributor_tool("entities/entity1", "entities/entity2", "tenant_id")
-    """
-    return await unmerge_entity_by_contributor(origin_entity_id, contributor_entity_id, tenant_id)
-
-@mcp.tool()
-async def unmerge_entity_tree_by_contributor_tool(origin_entity_id: str, contributor_entity_id: str, tenant_id: str = RELTIO_TENANT) -> dict:
-    """Unmerge a contributor entity and all profiles merged beneath it from a merged entity.
-    
-    Args:
-        origin_entity_id (str): The ID of the origin entity (the merged entity)
-        contributor_entity_id (str): The ID of the contributor entity to unmerge from the origin entity
-        tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
-    
-    Returns:
-        A dictionary containing the result of the unmerge operation with 'a' (modified origin) and 'b' (spawn) entities
-    
-    Raises:
-        Exception: If there's an error during the unmerge operation
-    
-    Examples:
-        # Unmerge a contributor entity and all profiles beneath it from a merged entity
-        unmerge_entity_tree_by_contributor_tool("entity1", "entity2", "tenant_id")
-        
-        # Unmerge using entity prefixes
-        unmerge_entity_tree_by_contributor_tool("entities/entity1", "entities/entity2", "tenant_id")
-    """
-    return await unmerge_entity_tree_by_contributor(origin_entity_id, contributor_entity_id, tenant_id)
 
 
 @mcp.tool()

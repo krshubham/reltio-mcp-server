@@ -20,17 +20,11 @@ from src.util.models import (
     RelationObjectModel,
     RelationModel,
     CreateRelationsRequest,
-    DeleteRelationRequest,
     GetEntityRelationsRequest,
     RelationSearchRequest,
-    CheckUserActivityRequest,
     EntityInteractionsRequest,
     CreateInteractionRequest,
     LookupListRequest,
-    GetUsersByRoleRequest,
-    GetUsersByGroupRequest,
-    GetUserWorkflowTasksRequest,
-    ReassignWorkflowTaskRequest,
     GetPossibleAssigneesRequest,
     RetrieveTasksRequest,
     GetTaskDetailsRequest,
@@ -477,21 +471,6 @@ class TestCreateRelationsRequest(unittest.TestCase):
             CreateRelationsRequest(relations=[])
 
 
-class TestDeleteRelationRequest(unittest.TestCase):
-    """Test DeleteRelationRequest"""
-    
-    def test_valid_request(self):
-        """Test valid request"""
-        request = DeleteRelationRequest(relation_id="rel123")
-        self.assertEqual(request.relation_id, "rel123")
-    
-    def test_relation_id_extraction(self):
-        """Test relation ID extraction"""
-        with patch('src.util.models.extract_relation_id', return_value='rel123'):
-            request = DeleteRelationRequest(relation_id="relations/rel123")
-            self.assertEqual(request.relation_id, "rel123")
-
-
 class TestGetEntityRelationsRequest(unittest.TestCase):
     """Test GetEntityRelationsRequest"""
     
@@ -569,41 +548,6 @@ class TestRelationSearchRequest(unittest.TestCase):
         """Test offset + max validation"""
         with self.assertRaises(ValidationError):
             RelationSearchRequest(offset=9995, max=10)
-
-
-class TestCheckUserActivityRequest(unittest.TestCase):
-    """Test CheckUserActivityRequest"""
-    
-    def test_valid_request(self):
-        """Test valid request"""
-        request = CheckUserActivityRequest(username="testuser", days_back=30)
-        self.assertEqual(request.username, "testuser")
-        self.assertEqual(request.days_back, 30)
-    
-    def test_default_days_back(self):
-        """Test default days_back"""
-        request = CheckUserActivityRequest(username="testuser")
-        self.assertEqual(request.days_back, 7)
-    
-    def test_empty_username(self):
-        """Test validation error with empty username"""
-        with self.assertRaises(ValidationError):
-            CheckUserActivityRequest(username="")
-    
-    def test_username_whitespace_stripping(self):
-        """Test username whitespace stripping"""
-        request = CheckUserActivityRequest(username="  testuser  ")
-        self.assertEqual(request.username, "testuser")
-    
-    def test_days_back_out_of_range_low(self):
-        """Test days_back cannot be less than 1"""
-        with self.assertRaises(ValidationError):
-            CheckUserActivityRequest(username="testuser", days_back=0)
-    
-    def test_days_back_out_of_range_high(self):
-        """Test days_back cannot exceed 365"""
-        with self.assertRaises(ValidationError):
-            CheckUserActivityRequest(username="testuser", days_back=400)
 
 
 class TestEntityInteractionsRequest(unittest.TestCase):
@@ -710,106 +654,6 @@ class TestLookupListRequest(unittest.TestCase):
             lookup_type="rdm/lookupTypes/TestType"
         )
         self.assertEqual(request.max_results, 10)
-
-
-class TestGetUsersByRoleRequest(unittest.TestCase):
-    """Test GetUsersByRoleRequest"""
-    
-    def test_valid_request(self):
-        """Test valid request"""
-        request = GetUsersByRoleRequest(role="ROLE_USER")
-        self.assertEqual(request.role, "ROLE_USER")
-    
-    def test_empty_role(self):
-        """Test validation error with empty role"""
-        with self.assertRaises(ValidationError):
-            GetUsersByRoleRequest(role="")
-    
-    def test_role_whitespace_stripping(self):
-        """Test role whitespace stripping"""
-        request = GetUsersByRoleRequest(role="  ROLE_USER  ")
-        self.assertEqual(request.role, "ROLE_USER")
-
-
-class TestGetUsersByGroupRequest(unittest.TestCase):
-    """Test GetUsersByGroupRequest"""
-    
-    def test_valid_request(self):
-        """Test valid request"""
-        request = GetUsersByGroupRequest(group="GROUP_LOCAL_RO_ALL")
-        self.assertEqual(request.group, "GROUP_LOCAL_RO_ALL")
-    
-    def test_empty_group(self):
-        """Test validation error with empty group"""
-        with self.assertRaises(ValidationError):
-            GetUsersByGroupRequest(group="")
-    
-    def test_group_whitespace_stripping(self):
-        """Test group whitespace stripping"""
-        request = GetUsersByGroupRequest(group="  GROUP_LOCAL_RO_ALL  ")
-        self.assertEqual(request.group, "GROUP_LOCAL_RO_ALL")
-
-
-class TestGetUserWorkflowTasksRequest(unittest.TestCase):
-    """Test GetUserWorkflowTasksRequest"""
-    
-    def test_valid_request(self):
-        """Test valid request"""
-        request = GetUserWorkflowTasksRequest(assignee="testuser")
-        self.assertEqual(request.assignee, "testuser")
-    
-    def test_empty_assignee(self):
-        """Test validation error with empty assignee"""
-        with self.assertRaises(ValidationError):
-            GetUserWorkflowTasksRequest(assignee="")
-    
-    def test_default_values(self):
-        """Test default values"""
-        request = GetUserWorkflowTasksRequest(assignee="testuser")
-        self.assertEqual(request.offset, 0)
-        self.assertEqual(request.max_results, 10)
-    
-    def test_offset_max_validation(self):
-        """Test offset + max_results validation"""
-        with self.assertRaises(ValidationError):
-            GetUserWorkflowTasksRequest(
-                assignee="testuser",
-                offset=9995,
-                max_results=10
-            )
-
-
-class TestReassignWorkflowTaskRequest(unittest.TestCase):
-    """Test ReassignWorkflowTaskRequest"""
-    
-    def test_valid_request(self):
-        """Test valid request"""
-        request = ReassignWorkflowTaskRequest(
-            task_id="task123",
-            assignee="newuser"
-        )
-        self.assertEqual(request.task_id, "task123")
-        self.assertEqual(request.assignee, "newuser")
-    
-    def test_empty_task_id(self):
-        """Test validation error with empty task_id"""
-        with self.assertRaises(ValidationError):
-            ReassignWorkflowTaskRequest(task_id="", assignee="user")
-    
-    def test_empty_assignee(self):
-        """Test validation error with empty assignee"""
-        with self.assertRaises(ValidationError):
-            ReassignWorkflowTaskRequest(task_id="task123", assignee="")
-    
-    def test_whitespace_stripping(self):
-        """Test whitespace stripping"""
-        request = ReassignWorkflowTaskRequest(
-            task_id="  task123  ",
-            assignee="  user  "
-        )
-        self.assertEqual(request.task_id, "task123")
-        self.assertEqual(request.assignee, "user")
-
 
 class TestGetPossibleAssigneesRequest(unittest.TestCase):
     """Test GetPossibleAssigneesRequest"""

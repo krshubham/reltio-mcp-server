@@ -297,7 +297,7 @@ async def get_total_matches(min_matches: int = 0, tenant_id: str = RELTIO_TENANT
             try:
                 await ActivityLog.execute_and_log_activity(
                     tenant_id=tenant_id,
-                    description=f"get_total_matches_tool : Found {result['total']} entities with more than {request.min_matches} potential matches."
+                    description=f"get_total_matches : Found {result['total']} entities with more than {request.min_matches} potential matches."
                 )
             except Exception as log_error:
                 logger.error(f"Activity logging failed for get_total_matches: {str(log_error)}")
@@ -400,7 +400,7 @@ async def get_total_matches_by_entity_type(min_matches: int = 0, tenant_id: str 
             try:
                 await ActivityLog.execute_and_log_activity(
                     tenant_id=tenant_id,
-                    description=f"get_total_matches_by_entity_type_tool : Found entities by type with more than {request.min_matches} potential matches."
+                    description=f"get_total_matches_by_entity_type : Found entities by type with more than {request.min_matches} potential matches."
                 )
             except Exception as log_error:
                 logger.error(f"Activity logging failed for get_total_matches_by_entity_type: {str(log_error)}")

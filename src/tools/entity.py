@@ -331,7 +331,7 @@ async def get_entity_matches(entity_id: str, tenant_id: str = RELTIO_TENANT, max
             source_entity_label = source_entity.get('label', '') if isinstance(source_entity, dict) else ''
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"get_entity_matches_tool : Successfully fetched potential matches for entity: {entity_id}, label: {source_entity_label}"
+                description=f"get_entity_matches : Successfully fetched potential matches for entity: {entity_id}, label: {source_entity_label}"
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for get_entity_matches: {str(log_error)}")
@@ -802,7 +802,7 @@ async def unmerge_entity_by_contributor(origin_entity_id: str, contributor_entit
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"unmerge_entity_by_contributor_tool : Successfully unmerged origin entity {request.origin_entity_id} by contributor entity {request.contributor_entity_id}"
+                description=f"unmerge_entity_by_contributor : Successfully unmerged origin entity {request.origin_entity_id} by contributor entity {request.contributor_entity_id}"
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for unmerge_entity_by_contributor: {str(log_error)}")
@@ -898,7 +898,7 @@ async def unmerge_entity_tree_by_contributor(origin_entity_id: str, contributor_
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"unmerge_entity_tree_by_contributor_tool : Successfully unmerged origin entity {request.origin_entity_id} by contributor entity {request.contributor_entity_id} and all profiles merged beneath it from a merged entity"
+                description=f"unmerge_entity_tree_by_contributor : Successfully unmerged origin entity {request.origin_entity_id} by contributor entity {request.contributor_entity_id} and all profiles merged beneath it from a merged entity"
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for unmerge_entity_tree_by_contributor: {str(log_error)}")

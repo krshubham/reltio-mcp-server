@@ -537,22 +537,6 @@ class CreateRelationsRequest(BaseModel):
         description="Tenant ID"
     )
 
-class DeleteRelationRequest(BaseModel):
-    """Model for deleting a relation"""
-    relation_id: Annotated[str, StringConstraints(pattern=RELATION_ID_PATTERN)] = Field(
-        ...,
-        description="The ID of the relation to delete"
-    )
-    tenant_id: Annotated[str, StringConstraints(pattern=TENANT_ID_PATTERN)] = Field(
-        default=RELTIO_TENANT,
-        description="Tenant ID"
-    )
-    
-    @field_validator('relation_id')
-    @classmethod
-    def extract_relation_id(cls, v):
-        """Extract the ID part from a relation URI if needed"""
-        return extract_relation_id(v)
 
 class GetEntityRelationsRequest(BaseModel):
     """Model for get_entity_relations_tool request"""
@@ -730,31 +714,7 @@ class RelationSearchRequest(BaseModel):
             raise ValueError("The sum of offset and max must not exceed 10000")
         return self
 
-class CheckUserActivityRequest(BaseModel):
-    """Model for checking user activity"""
-    username: str = Field(
-        ...,
-        min_length=1,
-        description="Username to check for activity"
-    )
-    days_back: int = Field(
-        default=7,
-        ge=1,
-        le=365,
-        description="Number of days to look back for activity"
-    )
-    tenant_id: Annotated[str, StringConstraints(pattern=TENANT_ID_PATTERN)] = Field(
-        default=RELTIO_TENANT,
-        description="Tenant ID"
-    )
-    
-    @field_validator('username')
-    @classmethod
-    def validate_username(cls, v):
-        """Validate username is not empty"""
-        if not v or not v.strip():
-            raise ValueError("Username cannot be empty")
-        return v.strip()
+
 
 class EntityInteractionsRequest(BaseModel):
     """Model for get_entity_interactions_tool request"""
@@ -888,109 +848,6 @@ class LookupListRequest(BaseModel):
         if not v.startswith('rdm/lookupTypes/'):
             raise ValueError("lookup_type must start with 'rdm/lookupTypes/'")
         return v
-
-class GetUsersByRoleRequest(BaseModel):
-    """Model for getting users by role"""
-    role: str = Field(
-        ...,
-        min_length=1,
-        description="Role to filter by (e.g., 'ROLE_REVIEWER', 'ROLE_READONLY', 'ROLE_USER', 'ROLE_API')"
-    )
-    tenant_id: Annotated[str, StringConstraints(pattern=TENANT_ID_PATTERN)] = Field(
-        default=RELTIO_TENANT,
-        description="Tenant ID to filter by"
-    )
-    
-    @field_validator('role')
-    @classmethod
-    def validate_role(cls, v):
-        """Validate role is not empty"""
-        if not v or not v.strip():
-            raise ValueError("Role cannot be empty")
-        return v.strip()
-
-class GetUsersByGroupRequest(BaseModel):
-    """Model for getting users by group"""
-    group: str = Field(
-        ...,
-        min_length=1,
-        description="Group to filter by (e.g., 'GROUP_LOCAL_RO_ALL', 'GROUP_LOCAL_DA_PT')"
-    )
-    tenant_id: Annotated[str, StringConstraints(pattern=TENANT_ID_PATTERN)] = Field(
-        default=RELTIO_TENANT,
-        description="Tenant ID to filter by"
-    )
-    
-    @field_validator('group')
-    @classmethod
-    def validate_group(cls, v):
-        """Validate group is not empty"""
-        if not v or not v.strip():
-            raise ValueError("Group cannot be empty")
-        return v.strip()
-
-class GetUserWorkflowTasksRequest(BaseModel):
-    """Model for getting user workflow tasks"""
-    assignee: str = Field(
-        ...,
-        min_length=1,
-        description="Username/assignee to get tasks for"
-    )
-    tenant_id: Annotated[str, StringConstraints(pattern=TENANT_ID_PATTERN)] = Field(
-        default=RELTIO_TENANT,
-        description="Tenant ID"
-    )
-    offset: int = Field(
-        default=0,
-        ge=0,
-        description="Starting index for paginated results"
-    )
-    max_results: int = Field(
-        default=10,
-        ge=1,
-        le=MAX_RESULTS_LIMIT,
-        description="Maximum number of results to return"
-    )
-    
-    @field_validator('assignee')
-    @classmethod
-    def validate_assignee(cls, v):
-        """Validate assignee is not empty"""
-        if not v or not v.strip():
-            raise ValueError("Assignee cannot be empty")
-        return v.strip()
-    
-    @model_validator(mode='after')
-    def validate_offset_max_combination(self):
-        """Validate that offset + max_results does not exceed 10000"""
-        if self.offset + self.max_results > 10000:
-            raise ValueError("The sum of offset and max_results must not exceed 10000")
-        return self
-
-class ReassignWorkflowTaskRequest(BaseModel):
-    """Model for reassigning workflow task"""
-    task_id: str = Field(
-        ...,
-        min_length=1,
-        description="The ID of the task to reassign"
-    )
-    assignee: str = Field(
-        ...,
-        min_length=1,
-        description="Username to assign the task to"
-    )
-    tenant_id: Annotated[str, StringConstraints(pattern=TENANT_ID_PATTERN)] = Field(
-        default=RELTIO_TENANT,
-        description="Tenant ID"
-    )
-    
-    @field_validator('task_id', 'assignee')
-    @classmethod
-    def validate_not_empty(cls, v, info):
-        """Validate field is not empty"""
-        if not v or not v.strip():
-            raise ValueError(f"{info.field_name} cannot be empty")
-        return v.strip()
 
 class GetPossibleAssigneesRequest(BaseModel):
     """Model for getting possible assignees for workflow tasks"""
