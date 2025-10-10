@@ -1,11 +1,13 @@
+import json
 import logging
 import yaml
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
 from src.util.auth import get_reltio_headers
 from src.util.models import EntitySearchRequest
 from src.util.activity_log import ActivityLog
-from src.tools.util import simplify_reltio_attributes
+from src.tools.util import ActivityLogLabel, create_search_activity_description, simplify_reltio_attributes
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -101,10 +103,13 @@ async def search_entities(filter: str = "", entity_type: str = "",
             )
 
         try:
-            entity_ids = [entity.get("uri", "") for entity in result]
+            
+            activity_description = create_search_activity_description(filter, entity_type, options)
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"search_entities_tool : Successfully searched for entities: {entity_id_label_pairs} with entity_type {entity_type}"
+                label=ActivityLogLabel.USER_SEARCH.value,
+                client_type=ACTIVITY_CLIENT,
+                description=json.dumps(activity_description)
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for search_entities_tool: {str(log_error)}")

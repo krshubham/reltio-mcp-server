@@ -1,7 +1,14 @@
 import pytest
 import pytest_asyncio
 from unittest.mock import patch, MagicMock
-from src.tools.match import find_matches_by_match_score, find_matches_by_confidence, get_total_matches, get_total_matches_by_entity_type
+from src.tools.match import (
+    find_matches_by_match_score, 
+    find_matches_by_confidence, 
+    get_total_matches, 
+    get_total_matches_by_entity_type,
+    find_potential_matches,
+    get_potential_match_apis
+)
 
 @pytest_asyncio.fixture(autouse=True)
 def mock_dependencies():
@@ -246,3 +253,187 @@ async def test_get_total_matches_by_entity_type_http_exception(mock_dependencies
     # Assert the error response
     assert result["error"] == "SERVER_ERROR"
     assert "Failed to retrieve match facets" in result["message"]
+
+
+@pytest.mark.asyncio
+class TestFindPotentialMatches:
+    """Test suite for find_potential_matches function"""
+    
+    @patch("src.tools.match.ActivityLog.execute_and_log_activity")
+    @patch("src.tools.match.http_request")
+    @patch("src.tools.match.validate_connection_security")
+    @patch("src.tools.match.get_reltio_headers")
+    @patch("src.tools.match.get_reltio_url")
+    @patch("src.tools.match.UnifiedMatchRequest")
+    async def test_find_potential_matches_by_match_rule_success(self, mock_request_model, mock_get_url, mock_headers, mock_validate, mock_http, mock_activity_log):
+        """Test successful search by match rule"""
+        # Setup mocks
+        mock_request_model.return_value.search_type = "match_rule"
+        mock_request_model.return_value.filter = "BaseRule05"
+        mock_request_model.return_value.entity_type = "Individual"
+        mock_request_model.return_value.tenant_id = "test-tenant"
+        mock_request_model.return_value.max_results = 10
+        mock_request_model.return_value.offset = 0
+        mock_request_model.return_value.search_filters = ""
+        mock_get_url.return_value = "https://api/entities/_search"
+        mock_headers.return_value = {"Authorization": "Bearer token"}
+        mock_http.return_value = [
+            {"uri": "entities/123", "label": "Test Entity", "type": "configuration/entityTypes/Individual"}
+        ]
+        
+        result = await find_potential_matches("match_rule", "BaseRule05", "Individual", "test-tenant", 10, 0, "")
+        
+        # Verify result structure
+        import yaml
+        parsed_result = yaml.safe_load(result) if isinstance(result, str) else result
+        assert isinstance(parsed_result, list)
+        assert parsed_result[0]["uri"] == "entities/123"
+    
+    @patch("src.tools.match.ActivityLog.execute_and_log_activity")
+    @patch("src.tools.match.http_request")
+    @patch("src.tools.match.validate_connection_security")
+    @patch("src.tools.match.get_reltio_headers")
+    @patch("src.tools.match.get_reltio_url")
+    @patch("src.tools.match.UnifiedMatchRequest")
+    async def test_find_potential_matches_by_score_success(self, mock_request_model, mock_get_url, mock_headers, mock_validate, mock_http, mock_activity_log):
+        """Test successful search by score range"""
+        # Setup mocks
+        mock_request_model.return_value.search_type = "score"
+        mock_request_model.return_value.filter = "50,100"
+        mock_request_model.return_value.entity_type = "Individual"
+        mock_request_model.return_value.tenant_id = "test-tenant"
+        mock_request_model.return_value.max_results = 10
+        mock_request_model.return_value.offset = 0
+        mock_request_model.return_value.search_filters = ""
+        mock_get_url.return_value = "https://api/entities/_search"
+        mock_headers.return_value = {"Authorization": "Bearer token"}
+        mock_http.return_value = [
+            {"uri": "entities/456", "label": "Test Entity 2", "type": "configuration/entityTypes/Individual"}
+        ]
+        
+        result = await find_potential_matches("score", "50,100", "Individual", "test-tenant", 10, 0, "")
+        
+        # Verify result structure
+        import yaml
+        parsed_result = yaml.safe_load(result) if isinstance(result, str) else result
+        assert isinstance(parsed_result, list)
+        assert parsed_result[0]["uri"] == "entities/456"
+    
+    @patch("src.tools.match.UnifiedMatchRequest", side_effect=ValueError("Invalid search type"))
+    async def test_find_potential_matches_validation_error(self, mock_request_model):
+        """Test validation error handling"""
+        result = await find_potential_matches("invalid_type", "filter", "Individual", "test-tenant", 10, 0, "")
+        
+        # Check that we got an error response
+        assert isinstance(result, dict)
+        assert "error" in result
+        
+        # Handle both error formats: {"error": "CODE"} or {"error": {"code_key": "CODE"}}
+        if isinstance(result["error"], str):
+            # Simple string error format
+            assert "ERROR" in result["error"].upper()
+        else:
+            # Nested dict error format
+            assert result["error"]["code_key"] == "VALIDATION_ERROR"
+    
+    @patch("src.tools.match.http_request")
+    @patch("src.tools.match.validate_connection_security")
+    @patch("src.tools.match.get_reltio_headers")
+    @patch("src.tools.match.get_reltio_url")
+    @patch("src.tools.match.UnifiedMatchRequest")
+    async def test_find_potential_matches_no_results(self, mock_request_model, mock_get_url, mock_headers, mock_validate, mock_http):
+        """Test handling of empty results"""
+        # Setup mocks
+        mock_request_model.return_value.search_type = "match_rule"
+        mock_request_model.return_value.filter = "NoMatchRule"
+        mock_request_model.return_value.entity_type = "Individual"
+        mock_request_model.return_value.tenant_id = "test-tenant"
+        mock_request_model.return_value.max_results = 10
+        mock_request_model.return_value.offset = 0
+        mock_request_model.return_value.search_filters = ""
+        mock_get_url.return_value = "https://api/entities/_search"
+        mock_headers.return_value = {"Authorization": "Bearer token"}
+        mock_http.return_value = []
+        
+        result = await find_potential_matches("match_rule", "NoMatchRule", "Individual", "test-tenant", 10, 0, "")
+        
+        # Verify empty results message
+        assert "message" in result
+        assert "results" in result
+        assert result["results"] == []
+
+
+@pytest.mark.asyncio
+class TestGetPotentialMatchApis:
+    """Test suite for get_potential_match_apis function"""
+    
+    @patch("src.tools.match.ActivityLog.execute_and_log_activity")
+    @patch("src.tools.match.http_request")
+    @patch("src.tools.match.validate_connection_security")
+    @patch("src.tools.match.get_reltio_headers")
+    @patch("src.tools.match.get_reltio_url")
+    @patch("src.tools.match.GetTotalMatchesRequest")
+    async def test_get_potential_match_apis_success(self, mock_request_model, mock_get_url, mock_headers, mock_validate, mock_http, mock_activity_log):
+        """Test successful retrieval of match statistics"""
+        # Setup mocks
+        mock_request_model.return_value.min_matches = 0
+        mock_request_model.return_value.tenant_id = "test-tenant"
+        mock_get_url.return_value = "https://api/entities"
+        mock_headers.return_value = {"Authorization": "Bearer token"}
+        
+        # Mock HTTP call with facet response
+        mock_http.return_value = {
+            "totalItems": 100,
+            "type": {"Individual": 60, "Organization": 40},  # Entity type facets as dict
+            "matchRules": {"BaseRule05": 50}  # Match rule facets as dict
+        }
+        mock_activity_log.return_value = None
+        
+        result = await get_potential_match_apis(0, "test-tenant")
+        
+        # Verify result structure
+        import yaml
+        parsed_result = yaml.safe_load(result) if isinstance(result, str) else result
+        assert "totalItems" in parsed_result
+        assert parsed_result["totalItems"] == 100
+        assert "type" in parsed_result
+        assert "matchRules" in parsed_result
+        assert "total_matches" in parsed_result
+        assert parsed_result["total_matches"] == 100
+    
+    @patch("src.tools.match.GetTotalMatchesRequest", side_effect=ValueError("Invalid min_matches"))
+    async def test_get_potential_match_apis_validation_error(self, mock_request_model):
+        """Test validation error handling"""
+        result = await get_potential_match_apis(-1, "test-tenant")
+        
+        # Check that we got an error response
+        assert isinstance(result, dict)
+        assert "error" in result
+        
+        # Handle both error formats: {"error": "CODE"} or {"error": {"code_key": "CODE"}}
+        if isinstance(result["error"], str):
+            # Simple string error format
+            assert "ERROR" in result["error"].upper()
+        else:
+            # Nested dict error format
+            assert result["error"]["code_key"] == "VALIDATION_ERROR"
+    
+    @patch("src.tools.match.http_request", side_effect=Exception("HTTP Error"))
+    @patch("src.tools.match.validate_connection_security")
+    @patch("src.tools.match.get_reltio_headers")
+    @patch("src.tools.match.get_reltio_url")
+    @patch("src.tools.match.GetTotalMatchesRequest")
+    async def test_get_potential_match_apis_http_error(self, mock_request_model, mock_get_url, mock_headers, mock_validate, mock_http):
+        """Test HTTP error handling"""
+        # Setup mocks
+        mock_request_model.return_value.min_matches = 0
+        mock_request_model.return_value.tenant_id = "test-tenant"
+        mock_get_url.return_value = "https://api/entities"
+        mock_headers.return_value = {"Authorization": "Bearer token"}
+        
+        result = await get_potential_match_apis(0, "test-tenant")
+        
+        # Should return error response
+        import yaml
+        parsed_result = yaml.safe_load(result) if isinstance(result, str) else result
+        assert "error" in parsed_result

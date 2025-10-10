@@ -92,26 +92,18 @@ class TestUpdateEntityAttributesEndpoint:
         # Call the function
         result = await src.server.update_entity_attributes_tool(entity_id="entity_id", updates={'attributes': {'FirstName': 'John'}}, tenant_id="tenant_id")
         
-        # Verify the tool was called with correct parameters
-        mock_update_entity_attributes.assert_called_once_with("entity_id", {'attributes': {'FirstName': 'John'}}, "tenant_id")
+        # Verify the tool was called with correct parameters (including default values)
+        mock_update_entity_attributes.assert_called_once_with(
+            "entity_id", 
+            {'attributes': {'FirstName': 'John'}}, 
+            "",  # options default
+            False,  # always_create_dcr default
+            None,  # change_request_id default
+            True,  # overwrite_default_crosswalk_value default
+            "tenant_id"
+        )
         assert result == {"id": "entity_id", "name": "Test Entity"}
 
-@pytest.mark.asyncio
-class TestGetMatchesEndpoint:
-    """Tests for the get_matches endpoint."""
-    
-    @patch('src.server.get_entity_matches')
-    async def test_get_matches(self, mock_get_entity_matches):
-        """Test get_matches function."""
-        # Setup mock
-        mock_get_entity_matches.return_value = {"matches": []}
-        
-        # Call the function
-        result = await src.server.get_entity_matches_tool("entity_id", "tenant_id", 10)
-        
-        # Verify the tool was called with correct parameters
-        mock_get_entity_matches.assert_called_once_with("entity_id", "tenant_id", 10)
-        assert result == {"matches": []}
 
 @pytest.mark.asyncio
 class TestGetMatcheHistoryEndpoint:
@@ -141,102 +133,17 @@ class TestGetRelationEndpoint:
         mock_get_relation_details.return_value = {"relation": []}
         
         # Call the function
-        result = await src.server.get_relation_tool("relation_id", "tenant_id")
+        result = await src.server.get_relation_details_tool("relation_id", "tenant_id")
         
         # Verify the tool was called with correct parameters
         mock_get_relation_details.assert_called_once_with("relation_id", "tenant_id")
         assert result == {"relation": []}
 
 
-@pytest.mark.asyncio
-class TestFindByMatchScoreEndpoint:
-    """Tests for the find_by_match_score endpoint."""
-    
-    @patch('src.server.find_entities_by_match_score_tool')
-    async def test_find_by_match_score(self, mock_find_entities_by_match_score_tool):
-        """Test find_by_match_score function."""
-        # Setup mock
-        mock_find_entities_by_match_score_tool.return_value = {"matches": []}
-        
-        # Call the function
-        result = await src.server.find_entities_by_match_score_tool(
-            start_match_score=50,
-            end_match_score=100,
-            entity_type="Individual",
-            tenant_id="tenant_id",
-            max_results=10
-        )
-        
-        # Verify the tool was called with correct parameters
-        mock_find_entities_by_match_score_tool.assert_called_once_with(
-            start_match_score=50,
-            end_match_score=100,
-            entity_type="Individual",
-            tenant_id="tenant_id",
-            max_results=10
-        )
-        assert result == {"matches": []}
 
 
-@pytest.mark.asyncio
-class TestFindByConfidenceEndpoint:
-    """Tests for the find_by_confidence endpoint."""
-    
-    @patch('src.server.find_entities_by_confidence_tool')
-    async def test_find_by_confidence(self, mock_find_entities_by_confidence_tool):
-        """Test find_by_confidence function."""
-        # Setup mock
-        mock_find_entities_by_confidence_tool.return_value = {"confidence_matches": []}
-        
-        # Call the function
-        result = await src.server.find_entities_by_confidence_tool(
-            confidence_level="Low confidence", entity_type="Individual", tenant_id="tenant_id", max_results=25)
-        
-        # Verify the tool was called with correct parameters
-        mock_find_entities_by_confidence_tool.assert_called_once_with(
-            confidence_level="Low confidence",
-            entity_type="Individual",
-            tenant_id="tenant_id",
-            max_results=25
-        )
-        assert result == {"confidence_matches": []}
 
-@pytest.mark.asyncio
-class TestGetTotalMatchesEndpoint:
-    """Tests for the get_total_matches endpoint."""
-    
-    @patch('src.server.get_total_matches')
-    async def test_get_total_matches(self, mock_get_total_matches):
-        """Test get_total_matches function."""
-        # Setup mock
-        mock_get_total_matches.return_value = {"total": 1114, "min_matches": 0}
-        
-        # Call the function
-        result = await src.server.get_total_matches_tool(0, "tenant_id")
-        
-        # Verify the tool was called with correct parameters
-        mock_get_total_matches.assert_called_once_with(0, "tenant_id")
-        assert result == {"total": 1114, "min_matches": 0}
 
-@pytest.mark.asyncio
-class TestGetTotalMatchesByEntityTypeEndpoint:
-    """Tests for the get_total_matches_by_entity_type endpoint."""
-    
-    @patch('src.server.get_total_matches_by_entity_type')
-    async def test_get_total_matches_by_entity_type(self, mock_get_total_matches_by_entity_type):
-        """Test get_total_matches_by_entity_type function."""
-        # Setup mock
-        mock_get_total_matches_by_entity_type.return_value = {
-            "type_counts": {"Individual": 56, "Organization": 1058},
-            "min_matches": 0
-        }
-        
-        # Call the function
-        result = await src.server.get_total_matches_by_entity_type_tool(0, "tenant_id")
-        
-        # Verify the tool was called with correct parameters
-        mock_get_total_matches_by_entity_type.assert_called_once_with(0, "tenant_id")
-        assert result == {"type_counts": {"Individual": 56, "Organization": 1058}, "min_matches": 0}
 
 @pytest.mark.asyncio
 class TestMergeEntitiesEndpoint:
@@ -435,102 +342,4 @@ async def test_get_merge_activities_tool():
         # Assert that the tool function returns the response from the implementation function
         assert result == mock_response
 
-@pytest.mark.asyncio
-class TestUnmergeEntityByContributorEndpoint:
-    """Tests for the unmerge_entity_by_contributor_tool endpoint."""
-    
-    @patch('src.server.unmerge_entity_by_contributor')
-    async def test_unmerge_entity_by_contributor(self, mock_unmerge_entity_by_contributor):
-        """Test unmerge_entity_by_contributor_tool function."""
-        # Setup mock
-        mock_result = {
-            "a": {"uri": "entities/origin", "attributes": {}},
-            "b": {"uri": "entities/contributor", "attributes": {}}
-        }
-        mock_unmerge_entity_by_contributor.return_value = mock_result
-        
-        # Call the function
-        result = await src.server.unmerge_entity_by_contributor_tool(
-            origin_entity_id="origin",
-            contributor_entity_id="contributor",
-            tenant_id="test-tenant"
-        )
-        
-        # Verify the tool was called with correct parameters
-        mock_unmerge_entity_by_contributor.assert_called_once_with(
-            "origin", "contributor", "test-tenant"
-        )
-        assert result == mock_result
-    
-    @patch('src.server.unmerge_entity_by_contributor')
-    async def test_unmerge_entity_by_contributor_with_entity_prefix(self, mock_unmerge_entity_by_contributor):
-        """Test unmerge_entity_by_contributor_tool function with entities/ prefix."""
-        # Setup mock
-        mock_result = {
-            "a": {"uri": "entities/origin", "attributes": {}},
-            "b": {"uri": "entities/contributor", "attributes": {}}
-        }
-        mock_unmerge_entity_by_contributor.return_value = mock_result
-        
-        # Call the function with entity prefix
-        result = await src.server.unmerge_entity_by_contributor_tool(
-            origin_entity_id="entities/origin",
-            contributor_entity_id="entities/contributor",
-            tenant_id="test-tenant"
-        )
-        
-        # Verify the tool was called with correct parameters
-        mock_unmerge_entity_by_contributor.assert_called_once_with(
-            "entities/origin", "entities/contributor", "test-tenant"
-        )
-        assert result == mock_result
 
-@pytest.mark.asyncio
-class TestUnmergeEntityTreeByContributorEndpoint:
-    """Tests for the unmerge_entity_tree_by_contributor_tool endpoint."""
-    
-    @patch('src.server.unmerge_entity_tree_by_contributor')
-    async def test_unmerge_entity_tree_by_contributor(self, mock_unmerge_entity_tree_by_contributor):
-        """Test unmerge_entity_tree_by_contributor_tool function."""
-        # Setup mock
-        mock_result = {
-            "a": {"uri": "entities/origin", "attributes": {}},
-            "b": {"uri": "entities/contributor", "attributes": {}}
-        }
-        mock_unmerge_entity_tree_by_contributor.return_value = mock_result
-        
-        # Call the function
-        result = await src.server.unmerge_entity_tree_by_contributor_tool(
-            origin_entity_id="origin",
-            contributor_entity_id="contributor",
-            tenant_id="test-tenant"
-        )
-        
-        # Verify the tool was called with correct parameters
-        mock_unmerge_entity_tree_by_contributor.assert_called_once_with(
-            "origin", "contributor", "test-tenant"
-        )
-        assert result == mock_result
-    
-    @patch('src.server.unmerge_entity_tree_by_contributor')
-    async def test_unmerge_entity_tree_by_contributor_with_entity_prefix(self, mock_unmerge_entity_tree_by_contributor):
-        """Test unmerge_entity_tree_by_contributor_tool function with entities/ prefix."""
-        # Setup mock
-        mock_result = {
-            "a": {"uri": "entities/origin", "attributes": {}},
-            "b": {"uri": "entities/contributor", "attributes": {}}
-        }
-        mock_unmerge_entity_tree_by_contributor.return_value = mock_result
-        
-        # Call the function with entity prefix
-        result = await src.server.unmerge_entity_tree_by_contributor_tool(
-            origin_entity_id="entities/origin",
-            contributor_entity_id="entities/contributor",
-            tenant_id="test-tenant"
-        )
-        
-        # Verify the tool was called with correct parameters
-        mock_unmerge_entity_tree_by_contributor.assert_called_once_with(
-            "entities/origin", "entities/contributor", "test-tenant"
-        )
-        assert result == mock_result

@@ -20,4 +20,4 @@ async def test_list_capabilities_success():
         
         assert "example_usage" in result
         assert isinstance(result["example_usage"], list)
-        assert "get_relation_tool(relation_id='relation_id')" in result["example_usage"]
+        assert "get_relation_details_tool(relation_id='relation_id')" in result["example_usage"]

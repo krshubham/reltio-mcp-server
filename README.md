@@ -24,33 +24,51 @@
 
 | Tool Name                        | Description                                  |
 |----------------------------------|----------------------------------------------|
-| `search_entities_tool`          | Advanced search for entities                 |
-| `get_entity_tool`               | Retrieve details of an entity                |
-| `update_entity_attributes_tool` | Update an entity attributes                  |
-| `get_entity_matches_tool`       | Find matches for a given entity              |
-| `get_entity_match_history_tool` | View match history of an entity              |
-| `get_relation_tool`             | Retrieve relation details                    |
-| `find_matches_by_match_score_tool` | Find matches within a score range         |
-| `find_matches_by_confidence_tool` | Find matches by confidence level           |
-| `get_total_matches_tool`        | Get total count of potential matches         |
-| `get_total_matches_by_entity_type_tool` | Get counts of matches by entity type  |
-| `merge_entities_tool`           | Merge two entities                           |
-| `reject_entity_match_tool`      | Mark an entity as not a match                |
-| `unmerge_entity_by_contributor_tool` | Unmerge a contributor entity keeping profiles under it |
-| `unmerge_entity_tree_by_contributor_tool` | Unmerge a contributor entity and all profiles under it |
-| `export_merge_tree_tool`        | Export merge tree for all entities of tenant |
-| `get_business_configuration_tool` | Business configuration of a tenant         |
-| `get_tenant_permissions_metadata_tool`| Tenant permission/security metadata    |
-| `get_tenant_metadata_tool`      | Get metadata details for a specific tenant, including schema and type counts. |
-| `get_data_model_definition_tool` | Retrieve the full data model definition for a tenant (entity, relation, etc. types). |
-| `get_entity_type_definition_tool` | Get the definition for a specific entity type in the tenant. |
-| `get_change_request_type_definition_tool` | Get the definition for a specific change request type in the tenant. |
-| `get_relation_type_definition_tool` | Get the definition for a specific relation type in the tenant. |
-| `get_interaction_type_definition_tool` | Get the definition for a specific interaction type in the tenant. |
-| `get_graph_type_definition_tool` | Get the definition for a specific graph type in the tenant. |
-| `get_grouping_type_definition_tool` | Get the definition for a specific grouping type in the tenant. |
-| `get_merge_activities_tool`     | Retrieve entity merge activity events with flexible filtering |
-| `capabilities_tool`             | Lists all available tools                    |
+| `search_entities_tool`          | Search for entities with advanced filtering |
+| `get_entity_tool`               | Get detailed information about a Reltio entity by ID |
+| `update_entity_attributes_tool` | Update specific attributes of an entity in Reltio |
+| `get_entity_match_history_tool` | Find the match history for a specific entity |
+| `get_relation_details_tool`     | Get detailed information about a Reltio relation by ID |
+| `merge_entities_tool`           | Merge multiple entities in Reltio |
+| `reject_entity_match_tool`      | Mark an entity as not a match (reject the potential duplicate) |
+| `export_merge_tree_tool`        | Export the merge tree for all entities in a specific tenant |
+| `get_business_configuration_tool` | Get the business configuration for a specific tenant |
+| `get_tenant_permissions_metadata_tool` | Get the permissions and security metadata for a specific tenant |
+| `get_merge_activities_tool`     | Retrieve activity events related to entity merges with flexible filtering options |
+| `get_tenant_metadata_tool`      | Get the tenant metadata details from the business configuration for a specific tenant |
+| `get_data_model_definition_tool` | Get complete details about the data model definition from the business configuration for a specific tenant |
+| `get_entity_type_definition_tool` | Get the entity type definition for a specified entity type from the business configuration of a specific tenant |
+| `get_change_request_type_definition_tool` | Get the change request type definition for a specified change request type from the business configuration of a specific tenant |
+| `get_relation_type_definition_tool` | Get the relation type definition for a specified relation type from the business configuration of a specific tenant |
+| `get_interaction_type_definition_tool` | Get the interaction type definition for a specified interaction type from the business configuration of a specific tenant |
+| `get_graph_type_definition_tool` | Get the graph type definition for a specified graph type from the business configuration of a specific tenant |
+| `get_grouping_type_definition_tool` | Get the grouping type definition for a specified grouping type from the business configuration of a specific tenant |
+| `find_potential_matches_tool`   | Unified tool to find all potential matches by match rule, score range, or confidence level |
+| `get_potential_matches_stats_tool` | Get the total, entity-level, and match-rule-level counts of potential matches in the tenant |
+| `get_entity_with_matches_tool`  | Get detailed information about a Reltio entity along with its potential matches |
+| `create_entity_tool`            | Create one or more entities in a Reltio tenant using the Entities API |
+| `get_entity_graph_tool`         | Get entity graph (hops) for a specific entity with comprehensive filtering and traversal options |
+| `get_entity_parents_tool`       | Find all parent paths for a given entity, traversing the specified graph types |
+| `create_relationships_tool`     | Create relationships between entities in Reltio |
+| `delete_relation_tool`          | Delete a relation object from a tenant using the DELETE operation |
+| `get_entity_relations_tool`     | Get entity connections/relations using Reltio connections API |
+| `relation_search_tool`          | Search for relationships in a tenant using the Relation Search API |
+| `check_user_activity_tool`      | Check if a user has been active in the system within a specified number of days |
+| `get_entity_interactions_tool`  | Get interactions for a Reltio entity by ID |
+| `create_interaction_tool`       | Create interactions in the Reltio Platform |
+| `rdm_lookups_list_tool`         | List lookups based on the given RDM lookup type |
+| `get_users_by_role_and_tenant_tool` | Get users by role and tenant |
+| `get_users_by_group_and_tenant_tool` | Get users by group and tenant |
+| `get_user_workflow_tasks_tool`  | Get workflow tasks for a specific user with total count and detailed task information |
+| `reassign_workflow_task_tool`   | Reassign a workflow task to a different user for load balancing and task distribution |
+| `get_possible_assignees_tool`   | Get possible assignees for specific tasks or based on filter/exclude criteria |
+| `retrieve_tasks_tool`           | Retrieve workflow tasks with comprehensive filtering options |
+| `get_task_details_tool`         | Get complete details of a specific workflow task by ID |
+| `start_process_instance_tool`   | Start a process instance in Reltio workflow for any type of change requests created by user |
+| `execute_task_action_tool`      | Execute an action on a workflow task |
+| `unmerge_entity_tool`           | Unmerge a contributor entity from a merged entity with optional tree behavior |
+| `health_check_tool`             | Check if the MCP server is healthy |
+| `capabilities_tool`             | Display this help information |
 
 ---
 
