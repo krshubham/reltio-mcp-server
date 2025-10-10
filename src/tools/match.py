@@ -1,12 +1,14 @@
 import logging
 import yaml
 import json
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
 from src.util.auth import get_reltio_headers
 from src.util.exceptions import SecurityError
 from src.util.models import MatchScoreRequest, ConfidenceLevelRequest, GetTotalMatchesRequest, GetMatchFacetsRequest, UnifiedMatchRequest, GetPotentialMatchApisRequest
 from src.util.activity_log import ActivityLog
+from src.tools.util import ActivityLogLabel
 
 
 # Configure logging
@@ -543,7 +545,15 @@ async def find_potential_matches(search_type: str = "match_rule", filter: str = 
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"find_potential_matches_tool : Successfully searched for potential matches with filter={payload['filter']}, search_type={request.search_type}"
+                label=ActivityLogLabel.USER_SEARCH.value,
+                client_type=ACTIVITY_CLIENT,
+                description=json.dumps({
+                    "activity": {
+                        "query": f"filter={payload['filter']}",
+                        "search_type": request.search_type
+                    },
+                    "version": '2.0'
+                })
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for find_potential_matches: {str(log_error)}")
@@ -643,6 +653,8 @@ async def get_potential_match_apis(min_matches: int = 0, tenant_id: str = RELTIO
                 try:
                     await ActivityLog.execute_and_log_activity(
                         tenant_id=tenant_id,
+                        label=ActivityLogLabel.POTENTIAL_MATCHES_FOUND.value,
+                        client_type=ACTIVITY_CLIENT,
                         description=f"get_potential_matches_stats_tool : Found total potential match  with type and match rules with more than {request.min_matches} matches."
                     )
                 except Exception as log_error:

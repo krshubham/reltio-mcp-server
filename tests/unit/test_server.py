@@ -92,8 +92,16 @@ class TestUpdateEntityAttributesEndpoint:
         # Call the function
         result = await src.server.update_entity_attributes_tool(entity_id="entity_id", updates={'attributes': {'FirstName': 'John'}}, tenant_id="tenant_id")
         
-        # Verify the tool was called with correct parameters
-        mock_update_entity_attributes.assert_called_once_with("entity_id", {'attributes': {'FirstName': 'John'}}, "tenant_id")
+        # Verify the tool was called with correct parameters (including default values)
+        mock_update_entity_attributes.assert_called_once_with(
+            "entity_id", 
+            {'attributes': {'FirstName': 'John'}}, 
+            "",  # options default
+            False,  # always_create_dcr default
+            None,  # change_request_id default
+            True,  # overwrite_default_crosswalk_value default
+            "tenant_id"
+        )
         assert result == {"id": "entity_id", "name": "Test Entity"}
 
 
@@ -125,7 +133,7 @@ class TestGetRelationEndpoint:
         mock_get_relation_details.return_value = {"relation": []}
         
         # Call the function
-        result = await src.server.get_relation_tool("relation_id", "tenant_id")
+        result = await src.server.get_relation_details_tool("relation_id", "tenant_id")
         
         # Verify the tool was called with correct parameters
         mock_get_relation_details.assert_called_once_with("relation_id", "tenant_id")

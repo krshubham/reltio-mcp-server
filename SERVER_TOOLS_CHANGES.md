@@ -529,7 +529,7 @@ This document tracks all changes made to the MCP server tools registered in `src
 5. `export_merge_tree_tool` - Export merge tree
 
 #### Relationship Management (5 tools)
-1. `get_relation_tool` - Get relation details
+1. `get_relation_details_tool` - Get relation details
 2. `create_relationships_tool` ⭐ NEW - Create relationships
 3. `delete_relation_tool` ⭐ NEW - Delete relation
 4. `get_entity_relations_tool` ⭐ NEW - Get entity connections

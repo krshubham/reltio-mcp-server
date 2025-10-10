@@ -28,7 +28,7 @@
 | `get_entity_tool`               | Get detailed information about a Reltio entity by ID |
 | `update_entity_attributes_tool` | Update specific attributes of an entity in Reltio |
 | `get_entity_match_history_tool` | Find the match history for a specific entity |
-| `get_relation_tool`             | Get detailed information about a Reltio relation by ID |
+| `get_relation_details_tool`     | Get detailed information about a Reltio relation by ID |
 | `merge_entities_tool`           | Merge multiple entities in Reltio |
 | `reject_entity_match_tool`      | Mark an entity as not a match (reject the potential duplicate) |
 | `export_merge_tree_tool`        | Export the merge tree for all entities in a specific tenant |

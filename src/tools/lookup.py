@@ -1,5 +1,6 @@
 import logging
 import yaml
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT
 from src.util.api import (
     get_reltio_url,
@@ -10,6 +11,7 @@ from src.util.api import (
 from src.util.auth import get_reltio_headers
 from src.util.models import LookupListRequest
 from src.util.activity_log import ActivityLog
+from src.tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -86,6 +88,8 @@ async def rdm_lookups_list(lookup_type: str, tenant_id: str = RELTIO_TENANT, max
             
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.LOOKUP_LIST.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"rdm_lookups_list_tool : Successfully retrieved lookups: {lookup_summary} for lookup_type {lookup_type}"
             )
         except Exception as log_error:

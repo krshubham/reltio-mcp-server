@@ -16,7 +16,9 @@ class ActivityLog:
 
     @staticmethod
     def create_request_body(
-        description: str
+        label:str,
+        description: str,
+        items:list[dict]=None
     ) -> Dict[str, Any]:
         """
         Create the request body for activity logging
@@ -28,12 +30,13 @@ class ActivityLog:
             Dict[str, Any]: The formatted request body
         """
         return {
-            "label": ACTIVITY_LOG_LABEL,
-            "description": description
+            "label": label,
+            "description": description,
+            "items": items
         }
 
     @staticmethod
-    async def log_activity(tenant_id: str, request_body: Dict[str, Any]) -> Dict[str, Any]:
+    async def log_activity(tenant_id: str, request_body: Dict[str, Any],client_type:str) -> Dict[str, Any]:
         """
         Log an activity by making a POST request to the Reltio activities API
         
@@ -56,6 +59,7 @@ class ActivityLog:
             try:
                 headers = get_reltio_headers() 
                 headers["ActivityID"] = activity_id
+                headers["globalId"] = client_type
                 # Validate connection security
                 validate_connection_security(url, headers)
             except Exception as e:
@@ -82,7 +86,10 @@ class ActivityLog:
     @staticmethod
     async def execute_and_log_activity(
         tenant_id: str,
-        description: str
+        label:str,
+        client_type:str,
+        description: str,
+        items:list[dict]=None
     ) -> Any:
         """
         Log an activity
@@ -96,11 +103,10 @@ class ActivityLog:
         """
         try:
             # Create request body
-            request_body = ActivityLog.create_request_body(description)
-            
+            request_body = ActivityLog.create_request_body(label,description,items)
             # Log the activity
-            await ActivityLog.log_activity(tenant_id, request_body)
+            await ActivityLog.log_activity(tenant_id, request_body,client_type)
             
         except Exception as e:
             logger.error(f"Error in execute_and_log_activity: {str(e)}")
-            raise 
+            raise

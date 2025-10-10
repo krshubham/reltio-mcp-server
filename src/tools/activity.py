@@ -8,13 +8,14 @@ from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 import yaml
 import time
-from src.constants import MAX_RESULTS_LIMIT
+from src.constants import ACTIVITY_CLIENT, MAX_RESULTS_LIMIT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
 from src.util.auth import get_reltio_headers
 from src.util.exceptions import SecurityError
 from src.util.models import MergeActivitiesRequest
 from src.util.activity_log import ActivityLog
+from src.tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -169,6 +170,8 @@ async def get_merge_activities(
             merge_activities_ids_str = ", ".join(merge_activities_ids)
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                client_type=ACTIVITY_CLIENT,
+                label=ActivityLogLabel.GET_MERGE_ACTIVITIES.value,
                 description=f"get_merge_activities_tool : MCP server successfully fetched merge activities, merge activities IDs: {merge_activities_ids_str}"
             )
         except Exception as log_error:
@@ -283,6 +286,8 @@ async def check_user_activity(username: str, days_back: int = 7, tenant_id: str 
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.USER_DETAILS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"check_user_activity_tool : MCP server checked activity for user {username} (active: {is_active})"
             )
         except Exception as log_error:

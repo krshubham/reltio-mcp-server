@@ -1,12 +1,13 @@
 import logging
 from typing import List, Dict, Any, Optional
 import yaml
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
 from src.util.auth import get_reltio_headers
 from src.util.models import RelationIdRequest, CreateRelationsRequest, GetEntityRelationsRequest, RelationSearchRequest
 from src.util.activity_log import ActivityLog
-from src.tools.util import simplify_reltio_attributes
+from src.tools.util import ActivityLogLabel, simplify_reltio_attributes
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -75,6 +76,8 @@ async def get_relation_details(relation_id: str, tenant_id: str = RELTIO_TENANT)
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.RELATIONSHIP_SEARCH.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_relation_details_tool : Successfully fetched relation details for relation {relation_id}"
             )
         except Exception as log_error:
@@ -280,6 +283,8 @@ async def create_relationships(relations: list, options: str = None, tenant_id: 
             relationship_summary = f"{len(request.relations)} relationship(s) of types: {', '.join(set(relation_types))}"
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.RELATIONSHIP_CREATE.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"create_relationships_tool : Successfully created {relationship_summary}"
             )
         except Exception as log_error:
@@ -337,6 +342,7 @@ async def delete_relation(relation_id: str, tenant_id: str = RELTIO_TENANT) -> d
         
         try:
             headers = get_reltio_headers()
+            headers["Globalid"] = ACTIVITY_CLIENT
             # Validate connection security
             validate_connection_security(url, headers)
         except Exception as e:
@@ -539,6 +545,8 @@ async def get_entity_relations(entity_id: str, entity_types: list, sort_by: str 
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.RELATIONSHIP_SEARCH.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_entity_relations_tool : Successfully fetched entity relations for entity {entity_id}"
             )
         except Exception as log_error:
@@ -679,6 +687,8 @@ async def search_relations(filter: str = "", select: str = "", max: int = 10, of
             
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.RELATIONSHIP_SEARCH.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"search_relations_tool : Successfully searched relations with {search_summary}"
             )
         except Exception as log_error:

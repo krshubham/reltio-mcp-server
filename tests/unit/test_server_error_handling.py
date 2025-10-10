@@ -71,7 +71,7 @@ class TestServerErrorHandling:
         mock_get_relation_details.side_effect = Exception("Test error")
         
         # Call the function
-        result = await src.server.get_relation_tool(relation_id="relation_id", tenant_id="tenant_id")
+        result = await src.server.get_relation_details_tool(relation_id="relation_id", tenant_id="tenant_id")
         
         # Verify the function handled the error and returned a result
         assert isinstance(result, dict)

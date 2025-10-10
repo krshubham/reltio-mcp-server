@@ -1,5 +1,6 @@
 import logging
 import yaml
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT
 from src.util.api import (
     get_reltio_url,
@@ -9,6 +10,7 @@ from src.util.api import (
 )
 from src.util.auth import get_reltio_headers
 from src.util.activity_log import ActivityLog
+from src.tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -103,6 +105,8 @@ async def get_tenant_permissions_metadata(tenant_id: str = RELTIO_TENANT) -> dic
         try:
             await ActivityLog.execute_and_log_activity(
                     tenant_id=tenant_id,
+                    label=ActivityLogLabel.TENANT_PERMISSIONS_METADATA.value,
+                    client_type=ACTIVITY_CLIENT,
                     description=f"get_tenant_permissions_metadata_tool : MCP server successfully fetched tenant permissions metadata"
                 )
         except Exception as log_error:
@@ -158,6 +162,8 @@ async def get_tenant_metadata(tenant_id: str = RELTIO_TENANT) -> dict:
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.TENANT_METADATA.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_tenant_metadata_tool : MCP server successfully fetched tenant metadata for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -260,6 +266,8 @@ async def get_data_model_definition(object_type: list, tenant_id: str = RELTIO_T
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.DATA_MODEL_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_data_model_definition_tool : MCP server successfully fetched data model definition for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -403,6 +411,8 @@ async def get_entity_type_definition(entity_type: str, tenant_id: str = RELTIO_T
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.ENTITY_TYPE_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_entity_type_definition_tool : MCP server successfully fetched {entity_type} definition for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -439,6 +449,8 @@ async def get_change_request_type_definition(change_request_type: str, tenant_id
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.CHANGE_REQUEST_TYPE_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_change_request_type_definition_tool : MCP server successfully fetched {change_request_type} definition for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -475,6 +487,8 @@ async def get_relation_type_definition(relation_type: str, tenant_id: str = RELT
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.RELATION_TYPE_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_relation_type_definition_tool : MCP server successfully fetched {relation_type} definition for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -511,6 +525,8 @@ async def get_interaction_type_definition(interaction_type: str, tenant_id: str 
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.INTERACTION_TYPE_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_interaction_type_definition_tool : MCP server successfully fetched {interaction_type} definition for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -547,6 +563,8 @@ async def get_graph_type_definition(graph_type: str, tenant_id: str = RELTIO_TEN
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.GRAPH_TYPE_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_graph_type_definition_tool : MCP server successfully fetched {graph_type} definition for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -583,6 +601,8 @@ async def get_grouping_type_definition(grouping_type: str, tenant_id: str = RELT
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.GROUPING_TYPE_DEFINITION.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_grouping_type_definition_tool : MCP server successfully fetched {grouping_type} definition for tenant {tenant_id}"
             )
         except Exception as log_error:

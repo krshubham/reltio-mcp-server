@@ -42,7 +42,7 @@ async def list_capabilities() -> dict:
                     "parameters": ["entity_id", "tenant_id"]
                 },
                 {
-                    "name": "get_relation_tool",
+                    "name": "get_relation_details_tool",
                     "description": "Get detailed information about a Reltio relation by ID",
                     "parameters": ["relation_id", "tenant_id"]
                 },
@@ -259,7 +259,7 @@ async def list_capabilities() -> dict:
                 "get_entity_tool(entity_id='118C6Ujm')",
                 "update_entity_attributes_tool(entity_id='118C6Ujm', updates=[{'type': 'UPDATE_ATTRIBUTE', 'uri': 'entities/118C6Ujm/attributes/FirstName/3Z3Tq6BBE', 'newValue': [{'value': 'John'}]}])",
                 "get_entity_match_history_tool(entity_id='118C6Ujm')",
-                "get_relation_tool(relation_id='relation_id')",
+                "get_relation_details_tool(relation_id='relation_id')",
                 "find_matches_by_match_score_tool(start_match_score=50, end_match_score=100, entity_type='Individual', tenant_id='tenant_id', max_results=10)",
                 "find_matches_by_confidence_tool(confidence_level='High confidence', entity_type='Individual', tenant_id='tenant_id', max_results=10)",
                 "merge_entities_tool(entity_ids=['entities/123abc', 'entities/456def'], tenant_id='tenant_id')",

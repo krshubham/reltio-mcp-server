@@ -1,12 +1,13 @@
 import logging
 from typing import List, Dict, Any
 import yaml
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
 from src.util.auth import get_reltio_headers
 from src.util.models import EntityInteractionsRequest, CreateInteractionRequest
 from src.util.activity_log import ActivityLog
-from src.tools.util import simplify_reltio_attributes
+from src.tools.util import ActivityLogLabel, simplify_reltio_attributes
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -101,6 +102,8 @@ async def get_entity_interactions(entity_id: str, max: int = 50, offset: int = 0
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.USER_SEARCH.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_entity_interactions_tool : Successfully fetched interactions for entity {entity_id}"
             )
         except Exception as log_error:
@@ -169,7 +172,7 @@ async def create_interactions(interactions: list, source_system: str = "configur
             headers["Source-System"] = request.source_system
             # Add required headers for interaction creation
             headers["Content-Type"] = "application/json"
-            
+            headers["Globalid"] = ACTIVITY_CLIENT
             # Validate connection security
             validate_connection_security(url, headers)
         except Exception as e:

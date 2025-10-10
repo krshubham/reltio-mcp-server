@@ -13,6 +13,7 @@ REQUIRE_TLS = True  # Require HTTPS for all connections
 ALLOWED_ORIGINS = ["https://app.reltio.com", "https://api.reltio.com"]  # Allowed origins
 HEADER_SOURCE_TAG = "Reltio-Open-MCP-Server"
 RELEVANCE_SCORE_NOT_AVAILABLE = "relevance score not available"
+ACTIVITY_CLIENT="RELTIO_OPEN_MCP_SERVER"
 
 # Error code definitions
 ERROR_CODES = {

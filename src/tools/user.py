@@ -1,6 +1,7 @@
 import logging
 import yaml
 import time
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT, RELTIO_AUTH_SERVER
 from src.util.api import (
     http_request, 
@@ -10,6 +11,7 @@ from src.util.api import (
 )
 from src.util.auth import get_reltio_headers
 from src.util.activity_log import ActivityLog
+from src.tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -269,6 +271,8 @@ async def get_users_by_role_and_tenant(role: str, tenant_id: str = RELTIO_TENANT
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.USER_DETAILS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_users_by_role_and_tenant_tool : MCP server successfully fetched users with role {role} for tenant {tenant_id}"
             )
         except Exception as log_error:
@@ -333,6 +337,8 @@ async def get_users_by_group(group: str, tenant_id: str = RELTIO_TENANT) -> dict
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.USER_DETAILS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_users_by_group_tool : MCP server successfully fetched users with group {group}"
             )
         except Exception as log_error:

@@ -235,41 +235,148 @@ async def get_entity_tool(entity_id: str, filter_field: Dict[str, List[str]] = N
     return await get_entity_details(entity_id, filter_field, tenant_id)
 
 @mcp.tool()
-async def update_entity_attributes_tool(entity_id: str, updates: List[Dict[str, Any]], tenant_id: str = RELTIO_TENANT) -> dict:
+async def update_entity_attributes_tool(entity_id: str, updates: List[Dict[str, Any]],options: str = "",always_create_dcr:bool = False,change_request_id:str = None, overwrite_default_crosswalk_value:bool = True,tenant_id: str = RELTIO_TENANT) -> dict:
     """Update specific attributes of an entity in Reltio.
     Before using this tool, ensure that the entity ID, attribute URIs and crosswalk are correct.
     
     Args:
         entity_id (str): Entity ID to update
         updates (List[Dict[str, Any]]): List of update operations as per Reltio API spec
+        options (str): Optional comma-separated list of options. Available options:
+        - sendHidden: Include hidden attributes in the response
+        - updateAttributeUpdateDates: Update the updateDate and singleAttributeUpdateDates timestamps
+        - addRefAttrUriToCrosswalk: Add reference attribute URIs to crosswalks during updates
+        Example: options="sendHidden,updateAttributeUpdateDates,addRefAttrUriToCrosswalk"
+        always_create_dcr (bool): If true, creates a DCR without updating the entity but default is false.
+        change_request_id (str): If provided, all changes will be added to the DCR with this ID instead of updating the entity directly or create a new DCR.
+        overwrite_default_crosswalk_value (bool): If true, overwrites the default crosswalk value.(TO BE USED MOST OF THE TIME, SKIP IF Changes Seem minimal)
         tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
     
     Returns:
+        Changed entity or data change request (if changeRequestId is defined or if you don't have access to update the object, but you do have permission to initiate a data change request).
         A dictionary containing the API response
-    
     Raises:
         Exception: If there's an error during the update
     
+    Instructions:
+        # The following types of changes can be performed for an entity:
+        #   - INSERT_ATTRIBUTE
+        #   - UPDATE_ATTRIBUTE
+        #   - DELETE_ATTRIBUTE
+        #   - PIN_ATTRIBUTE
+        #   - IGNORE_ATTRIBUTE
+        #   - UPDATE_TAGS
+        #   - UPDATE_ROLES
+        #   - UPDATE_START_DATE
+        #   - UPDATE_END_DATE
+        #
+        # Requirements for change objects:
+        #   - All changes except DELETE_ATTRIBUTE must include a 'newValue' property,
+        #     which specifies the new value for attributes, tags, or roles.
+        #   - The following change types must include a 'uri' property (the URI of the attribute):
+        #       INSERT_ATTRIBUTE, UPDATE_ATTRIBUTE, DELETE_ATTRIBUTE, PIN_ATTRIBUTE, IGNORE_ATTRIBUTE
+        #   - The following change types must include a 'crosswalk' property (the crosswalk to update):
+        #       INSERT_ATTRIBUTE, UPDATE_ATTRIBUTE, DELETE_ATTRIBUTE
     Examples:
-        # Update FirstName and LastName attributes in entity with ID 47uMxdm
+        # Update FirstName and LastName attributes in entity with ID 000005KL
+        [
+            {
+                "type": "INSERT_ATTRIBUTE",
+                "uri": "entities/000005KL/attributes/FirstName",
+                "newValue": [
+                    {"value": "John"},
+                    {"value": "Jonny"}
+                ],
+                "crosswalk": {
+                    "type": "configuration/sources/HMS",       
+                    "value": "000005KL",
+                    "sourceTable": "testTable" #this is optional
+                }
+            },
+            {
+                "type": "INSERT_ATTRIBUTE",
+                "uri": "entities/000005KL/attributes/Identifiers",
+                "newValue": [
+                    {
+                        "value": {
+                            "Type": [{"value": "Test"}],
+                            "ID": [{"value": "1111"}]
+                        }
+                    }
+                ],
+                "crosswalk": {
+                    "type": "configuration/sources/Reltio",
+                    "value": "000005KL",
+                    "sourceTable": "testTable" #this is optional
+                }
+            },
+            {
+                "type": "UPDATE_ATTRIBUTE",
+                "uri": "entities/000005KL/attributes/LastName/ohg4GDs3",
+                "newValue": {"value": "Smith"},
+                "crosswalk": {
+                    "type": "configuration/sources/HMS",
+                    "value": "000005KL`",
+                    "sourceTable": "testTable" #this is optional
+                }
+            },
+            {
+                "type": "DELETE_ATTRIBUTE",
+                "uri": "entities/000005KL/attributes/MiddleName/Jk07LJ3d",
+                "crosswalk": {
+                    "type": "configuration/sources/HMS",
+                    "value": "000005KL",
+                    "sourceTable": "testTable" #this is optional
+                }
+            },
+            {
+                "type": "PIN_ATTRIBUTE",
+                "uri": "entities/000005KL/attributes/ProductMetrics/IL98KH3f",
+                "newValue": {"value": "true"}
+            },
+            {
+                "type": "IGNORE_ATTRIBUTE",
+                "uri": "entities/000005KL/attributes/ProductMetrics/IL98KH3f/Name/ohgGk4wd",
+                "newValue": {"value": "false"}
+            },
+            {
+                "type": "UPDATE_TAGS",
+                "newValue": ["tag1", "tag2"]
+            },
+            {
+                "type": "UPDATE_ROLES",
+                "newValue": []
+            },
+            {
+                "type": "UPDATE_START_DATE",
+                "newValue": "1455702524000"
+            },
+            {
+                "type": "UPDATE_END_DATE",
+                "newValue": "1455702524000"
+            }
+        ]         
+        # Update FirstName and LastName attributes in entity with ID 47uMxdm enabling trace
         entity_id="47uMxdm",
         updates=[
             {
                 "type": "UPDATE_ATTRIBUTE",
                 "uri": "entities/47uMxdm/attributes/FirstName/3Z3Tq6BBE",
                 "newValue": [{"value": "Willy"}],
-                "crosswalk": {"type": "configuration/sources/LNKD", "value": "LNKD.47uMxdm"}
+                "crosswalk": {"type": "configuration/sources/LNKD", "value": "47uMxdm"}
             },
             {
                 "type": "UPDATE_ATTRIBUTE",
                 "uri": "entities/47uMxdm/attributes/LastName/3Z3Tq6FRU",
                 "newValue": [{"value": "Haarley"}],
-                "crosswalk": {"type": "configuration/sources/LNKD", "value": "LNKD.47uMxdm"}
+                "crosswalk": {"type": "configuration/sources/LNKD", "value": "47uMxdm"}
             }
         ]
-        update_entity_attributes(entity_id, updates, "tenant_id")
+        update_entity_attributes_tool(entity_id, updates, "tenant_id")
     """
-    return await update_entity_attributes(entity_id, updates, tenant_id)
+    
+    result = await update_entity_attributes(entity_id, updates,options,always_create_dcr,change_request_id,overwrite_default_crosswalk_value,tenant_id)
+    return result
 
 
 @mcp.tool()
@@ -293,7 +400,7 @@ async def get_entity_match_history_tool(entity_id: str, tenant_id: str = RELTIO_
     return await get_entity_match_history(entity_id, tenant_id)
 
 @mcp.tool()
-async def get_relation_tool(relation_id: str, tenant_id: str = RELTIO_TENANT) -> dict:
+async def get_relation_details_tool(relation_id: str, tenant_id: str = RELTIO_TENANT) -> dict:
     """Get detailed information about a Reltio relation by ID
     
     Args:
@@ -320,7 +427,6 @@ async def find_potential_matches_tool(search_type: str = "match_rule", filter: s
                                      search_filters: str = "") -> dict:
     """Unified tool to find all potential matches by match rule, score range, or confidence level
     
-    This tool replaces the deprecated find_entities_by_match_score_tool and find_entities_by_confidence_tool.
     It provides a unified interface for finding potential matches using different search criteria.
     
     Args:

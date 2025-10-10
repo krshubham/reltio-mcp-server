@@ -2,6 +2,7 @@ import logging
 from typing import List, Dict, Any, Optional
 import yaml
 import requests
+from src.constants import ACTIVITY_CLIENT
 from src.env import RELTIO_TENANT, RELTIO_ENVIRONMENT
 from src.util.api import (
     create_error_response, 
@@ -11,6 +12,7 @@ from src.util.api import (
 from src.util.auth import get_reltio_headers
 from src.util.activity_log import ActivityLog
 from src.util.models import GetPossibleAssigneesRequest, RetrieveTasksRequest, GetTaskDetailsRequest, StartProcessInstanceRequest, ExecuteTaskActionRequest
+from src.tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -121,6 +123,8 @@ async def get_user_workflow_tasks(assignee: str, tenant_id: str = RELTIO_TENANT,
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_user_workflow_tasks_tool : MCP server successfully fetched workflow tasks for user {assignee} (total: {result['total_tasks']}, returned: {len(tasks)})"
             )
         except Exception as log_error:
@@ -194,6 +198,8 @@ async def reassign_workflow_task(task_id: str, assignee: str, tenant_id: str = R
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"reassign_workflow_task_tool : MCP server successfully reassigned task {task_id} to user {assignee}"
             )
         except Exception as log_error:
@@ -301,6 +307,8 @@ async def get_possible_assignees(tenant_id: str = RELTIO_TENANT, tasks: Optional
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=request.tenant_id,
+                label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"get_possible_assignees_tool : MCP server successfully retrieved possible assignees (total: {result['total']})"
             )
         except Exception as log_error:
@@ -488,6 +496,8 @@ async def retrieve_tasks(
                 
                 await ActivityLog.execute_and_log_activity(
                     tenant_id=request.tenant_id,
+                    label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                    client_type=ACTIVITY_CLIENT,
                     description=" ".join(description_parts)
                 )
             except Exception as log_error:
@@ -605,6 +615,8 @@ async def get_task_details(
                 
                 await ActivityLog.execute_and_log_activity(
                     tenant_id=request.tenant_id,
+                    label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                    client_type=ACTIVITY_CLIENT,
                     description=description
                 )
             except Exception as log_error:
@@ -666,7 +678,7 @@ async def start_process_instance(
             headers = get_reltio_headers()
             headers['Content-Type'] = 'application/json'
             headers['EnvironmentURL'] = f"https://{RELTIO_ENVIRONMENT}.reltio.com"
-            
+            headers["Globalid"] = ACTIVITY_CLIENT
             # Validate connection security
             validate_connection_security(url, headers)
         except Exception as e:
@@ -726,6 +738,8 @@ async def start_process_instance(
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"start_process_instance_tool : Successfully started process instance {result['processInstanceId']} of type {process_type} for {len(object_uris)} objects"
             )
         except Exception as log_error:
@@ -784,6 +798,7 @@ async def execute_task_action(
             headers = get_reltio_headers()
             headers['Content-Type'] = 'application/json'
             headers['EnvironmentURL'] = f"https://{RELTIO_ENVIRONMENT}.reltio.com"
+            headers["Globalid"] = ACTIVITY_CLIENT
             
             # Validate connection security
             validate_connection_security(url, headers)
@@ -850,6 +865,8 @@ async def execute_task_action(
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
+                label=ActivityLogLabel.WORKFLOW_TASKS.value,
+                client_type=ACTIVITY_CLIENT,
                 description=f"execute_task_action_tool : Successfully executed action '{action}' on task {task_id} with status '{result['status']}'"
             )
         except Exception as log_error:

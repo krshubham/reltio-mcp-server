@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 import yaml
 import json
 import re
-from src.constants import MAX_RESULTS_LIMIT
+from src.constants import ACTIVITY_CLIENT, MAX_RESULTS_LIMIT
 from src.env import RELTIO_TENANT
 from src.util.api import get_reltio_url, get_reltio_export_job_url, http_request, create_error_response, validate_connection_security
 from src.util.auth import get_reltio_headers
@@ -14,7 +14,7 @@ from src.util.models import (
     CreateEntitiesRequest, GetEntityParentsRequest
 )
 from src.util.activity_log import ActivityLog
-from src.tools.util import simplify_reltio_attributes, slim_crosswalks, format_entity_matches, format_unified_entity_matches
+from src.tools.util import ActivityLogLabel, simplify_reltio_attributes, slim_crosswalks, format_entity_matches, format_unified_entity_matches
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
@@ -118,7 +118,10 @@ async def get_entity_details(entity_id: str, filter_field: Dict[str, List[str]] 
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"get_entity_details_tool : Successfully fetched entity details for entity: {entity_id}, label: {entity.get('label', '')} with filter {filter_field}"
+                label=ActivityLogLabel.USER_PROFILE_VIEW.value,
+                client_type=ACTIVITY_CLIENT,
+                description=json.dumps({"uri":f"entities/{entity_id.split('/')[-1]}","label":entity.get("label","")}),
+                items=[{"objectUri":f"entities/{entity_id.split('/')[-1]}"}]
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for get_entity_details: {str(log_error)}")
@@ -140,12 +143,19 @@ async def get_entity_details(entity_id: str, filter_field: Dict[str, List[str]] 
             "An unexpected error occurred while retrieving entity details"
         )
 
-async def update_entity_attributes(entity_id: str, updates: List[Dict[str, Any]], tenant_id: str = RELTIO_TENANT) -> dict:
+async def update_entity_attributes(entity_id: str, updates: List[Dict[str, Any]],options:str = "",always_create_dcr:bool = False,change_request_id:str = None, overwrite_default_crosswalk_value:bool = True,tenant_id: str = RELTIO_TENANT) -> dict:
     """Update specific attributes of an entity in Reltio
     
     Args:
         entity_id (str): Entity ID to update
         updates (List[Dict[str, Any]]): List of update operations as per Reltio API spec
+        options (str): Optional comma-separated list of options. Available options:
+            - sendHidden: Include hidden attributes in the response
+            - updateAttributeUpdateDates: Update the updateDate and singleAttributeUpdateDates timestamps
+            - addRefAttrUriToCrosswalk: Add reference attribute URIs to crosswalks during updates
+            Example: options="sendHidden,updateAttributeUpdateDates"
+        always_create_dcr (bool): If true, creates a DCR without updating the entity.(TO BE USED MOST OF THE TIME, SKIP IF Changes Seem minimal)
+        change_request_id (str): If provided, all changes will be added to the DCR with this ID instead of updating the entity directly.
         tenant_id (str): Tenant ID for the Reltio environment. Defaults to RELTIO_TENANT env value.
     
     Returns:
@@ -160,7 +170,11 @@ async def update_entity_attributes(entity_id: str, updates: List[Dict[str, Any]]
             request = UpdateEntityAttributesRequest(
                 entity_id=entity_id,
                 updates=updates,
-                tenant_id=tenant_id
+                options=options,
+                tenant_id=tenant_id,
+                always_create_dcr=always_create_dcr,
+                change_request_id=change_request_id,
+                overwrite_default_crosswalk_value=overwrite_default_crosswalk_value
             )
         except ValueError as e:
             logger.warning(f"Validation error in update_entity_attributes: {str(e)}")
@@ -170,10 +184,19 @@ async def update_entity_attributes(entity_id: str, updates: List[Dict[str, Any]]
             )
 
         url = get_reltio_url(f"entities/{request.entity_id}/_update", "api", request.tenant_id)
-
+        params={}
+        if options and options.strip():
+            params["options"] = options
+        if request.always_create_dcr:
+            params["alwaysCreateDCR"] = request.always_create_dcr
+        if request.change_request_id:
+            params["changeRequestId"] = request.change_request_id
+        if request.overwrite_default_crosswalk_value:
+            params["overwriteDefaultCrosswalkValue"] = request.overwrite_default_crosswalk_value
         try:
             headers = get_reltio_headers()
             headers["Content-Type"] = "application/json"
+            headers["Globalid"] = ACTIVITY_CLIENT
             validate_connection_security(url, headers)
         except Exception as e:
             logger.error(f"Authentication or security error: {str(e)}")
@@ -183,7 +206,7 @@ async def update_entity_attributes(entity_id: str, updates: List[Dict[str, Any]]
             )
 
         try:
-            result = http_request(url, method="POST", headers=headers, data=request.updates)
+            result = http_request(url, method="POST", headers=headers, data=request.updates,params=params if params else None)
         except Exception as e:
             logger.error(f"API request error in update_entity_attributes: {str(e)}")
             if "404" in str(e):
@@ -193,25 +216,17 @@ async def update_entity_attributes(entity_id: str, updates: List[Dict[str, Any]]
                 )
             return create_error_response(
                 "SERVER_ERROR",
-                "Failed to update entity attributes in Reltio API"
-            )
+                f"Failed to update entity attributes in Reltio API- {str(e)}"
+            )  
+
         
-        # Try to log activity for success
-        try:
-            entity_label = result.get('label', '') if isinstance(result, dict) else ''
-            await ActivityLog.execute_and_log_activity(
-                tenant_id=tenant_id,
-                description=f"update_entity_attributes_tool : Successfully updated entity: {entity_id}, label: {entity_label} with updates {updates}"
-            )
-        except Exception as log_error:
-            logger.error(f"Activity logging failed for update_entity_attributes: {str(log_error)}")
 
         return yaml.dump(result, sort_keys=False)
     except Exception as e:
         logger.error(f"Unexpected error in update_entity_attributes: {str(e)}")
         return create_error_response(
             "SERVER_ERROR",
-            "An unexpected error occurred while updating entity attributes"
+            f"An unexpected error occurred while updating entity attributes- {str(e)}"
         )
 
 async def get_entity_matches(entity_id: str, tenant_id: str = RELTIO_TENANT, max_results: int = 25) -> dict:
@@ -420,7 +435,10 @@ async def get_entity_match_history(entity_id: str, tenant_id: str = RELTIO_TENAN
             try:
                 await ActivityLog.execute_and_log_activity(
                     tenant_id=tenant_id,
-                    description=f"get_entity_match_history_tool : No match history found for entity {request.entity_id}"
+                    label=ActivityLogLabel.USER_PROFILE_VIEW.value,
+                    client_type=ACTIVITY_CLIENT,
+                    description=json.dumps({"uri":f"entities/{entity_id.split('/')[-1]}","label":""}),
+                    items=[{"objectUri":f"entities/{entity_id.split('/')[-1]}"}]
                 )
             except Exception as log_error:
                 logger.error(f"Activity logging failed for get_entity_match_history (no results): {str(log_error)}")
@@ -500,6 +518,7 @@ async def merge_entities(entity_ids: List[str], tenant_id: str = RELTIO_TENANT) 
         
         try:
             headers = get_reltio_headers()
+            headers["Globalid"] = ACTIVITY_CLIENT
             
             # Validate connection security
             validate_connection_security(url, headers)
@@ -540,14 +559,7 @@ async def merge_entities(entity_ids: List[str], tenant_id: str = RELTIO_TENANT) 
                 "SERVER_ERROR",
                 "Failed to merge entities"
             )
-        try:
-            entity_ids_str = ", ".join(entity_ids)
-            await ActivityLog.execute_and_log_activity(
-                tenant_id=tenant_id,
-                description=f"merge_entities_tool : Successfully merged entities {entity_ids_str}"
-            )
-        except Exception as log_error:
-            logger.error(f"Activity logging failed for merge_entities: {str(log_error)}")
+        
 
         return merge_result
     except Exception as e:
@@ -599,7 +611,7 @@ async def reject_entity_match(source_id: str, target_id: str, tenant_id: str = R
         
         try:
             headers = get_reltio_headers()
-            
+            headers["Globalid"] = ACTIVITY_CLIENT
             # Validate connection security
             validate_connection_security(base_url, headers)
         except Exception as e:
@@ -639,13 +651,7 @@ async def reject_entity_match(source_id: str, target_id: str, tenant_id: str = R
         
         # If we reach here, the operation was successful
         # The API might not return any content, so create a meaningful response
-        try:
-            await ActivityLog.execute_and_log_activity(
-                tenant_id=tenant_id,
-                description=f"reject_entity_match_tool : Successfully rejected match between entities {request.source_id} and {request.target_id}"
-            )
-        except Exception as log_error:
-            logger.error(f"Activity logging failed for reject_entity_match: {str(log_error)}")
+        
 
         if not reject_result:
             return {
@@ -709,7 +715,9 @@ async def export_merge_tree(email_id: str, tenant_id: str = RELTIO_TENANT) -> di
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"export_merge_tree_tool : {str(result)}"
+                label=ActivityLogLabel.ENTITY_MERGE_TREE_EXPORT.value,
+                client_type=ACTIVITY_CLIENT,
+                description=f"export_merge_tree_tool : Successfully scheduled export merge tree job for all entities in tenant {tenant_id}"
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for export_merge_tree: {str(log_error)}")
@@ -762,7 +770,7 @@ async def unmerge_entity_by_contributor(origin_entity_id: str, contributor_entit
         try:
             headers = get_reltio_headers()
             headers["Content-Type"] = "application/json"
-            
+            headers["Globalid"] = ACTIVITY_CLIENT
             # Validate connection security
             validate_connection_security(url, headers)
         except Exception as e:
@@ -799,13 +807,6 @@ async def unmerge_entity_by_contributor(origin_entity_id: str, contributor_entit
                 "SERVER_ERROR",
                 "Failed to unmerge entity"
             )
-        try:
-            await ActivityLog.execute_and_log_activity(
-                tenant_id=tenant_id,
-                description=f"unmerge_entity_by_contributor : Successfully unmerged origin entity {request.origin_entity_id} by contributor entity {request.contributor_entity_id}"
-            )
-        except Exception as log_error:
-            logger.error(f"Activity logging failed for unmerge_entity_by_contributor: {str(log_error)}")
 
         return unmerge_result
     except Exception as e:
@@ -858,6 +859,7 @@ async def unmerge_entity_tree_by_contributor(origin_entity_id: str, contributor_
         try:
             headers = get_reltio_headers()
             headers["Content-Type"] = "application/json"
+            headers["Globalid"] = ACTIVITY_CLIENT
             
             # Validate connection security
             validate_connection_security(url, headers)
@@ -895,13 +897,6 @@ async def unmerge_entity_tree_by_contributor(origin_entity_id: str, contributor_
                 "SERVER_ERROR",
                 "Failed to tree unmerge entity"
             )
-        try:
-            await ActivityLog.execute_and_log_activity(
-                tenant_id=tenant_id,
-                description=f"unmerge_entity_tree_by_contributor : Successfully unmerged origin entity {request.origin_entity_id} by contributor entity {request.contributor_entity_id} and all profiles merged beneath it from a merged entity"
-            )
-        except Exception as log_error:
-            logger.error(f"Activity logging failed for unmerge_entity_tree_by_contributor: {str(log_error)}")
         
         return unmerge_result
     except Exception as e:
@@ -1074,7 +1069,14 @@ async def get_entity_with_matches(
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"get_entity_with_matches_tool : Successfully fetched entity with matches for entity: {entity_id}, label: {source_entity.get('label', '')}, total_matches: {total_count}"
+                label=ActivityLogLabel.POTENTIAL_MATCHES_FOUND.value,
+                client_type=ACTIVITY_CLIENT,
+                description=json.dumps({
+                    "uri": f"entities/{entity_id.split('/')[-1]}",
+                    "label": source_entity.get("label", ""),
+                    "total_matches": total_count
+                }),
+                items=[{"objectUri": f"entities/{entity_id.split('/')[-1]}"}]
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for get_entity_with_matches: {str(log_error)}")
@@ -1125,6 +1127,7 @@ async def create_entities(entities: List[Dict[str, Any]], return_objects: bool =
         
         try:
             headers = get_reltio_headers()
+            headers["Globalid"] = ACTIVITY_CLIENT
             # Validate connection security
             validate_connection_security(url, headers)
         except Exception as e:
@@ -1218,14 +1221,7 @@ async def create_entities(entities: List[Dict[str, Any]], return_objects: bool =
                 
                 processed_results.append(processed_result)
             
-            # Log activity for success
-            try:
-                await ActivityLog.execute_and_log_activity(
-                    tenant_id=tenant_id,
-                    description=f"create_entity_tool : Successfully created {successful_count} entities, {failed_count} failed"
-                )
-            except Exception as log_error:
-                logger.error(f"Activity logging failed for create_entities: {str(log_error)}")
+            
             
             return yaml.dump(processed_results, sort_keys=False)
         else:
@@ -1396,7 +1392,18 @@ async def get_entity_hops(
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"get_entity_hops_tool : Successfully fetched entity hops for entity: {entity_id}, deep: {deep}, max_results: {max_results}"
+                label=ActivityLogLabel.ENTITY_HOPS.value,
+                client_type=ACTIVITY_CLIENT,
+                description=json.dumps({
+                    "uri": f"entities/{entity_id.split('/')[-1]}",
+                    "deep": deep,
+                    "max_results": max_results,
+                    "select": select,
+                    "graph_type_uris": graph_type_uris,
+                    "relation_type_uris": relation_type_uris,
+                    "entity_type_uris": entity_type_uris
+                }),
+                items=[{"objectUri": f"entities/{entity_id.split('/')[-1]}"}]
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for get_entity_hops: {str(log_error)}")
@@ -1560,7 +1567,15 @@ async def get_entity_parents(
         try:
             await ActivityLog.execute_and_log_activity(
                 tenant_id=tenant_id,
-                description=f"get_entity_parents_tool : Successfully fetched entity parents for entity: {entity_id}, graph_type_uris: {graph_type_uris}"
+                label=ActivityLogLabel.USER_PROFILE_VIEW.value,
+                client_type=ACTIVITY_CLIENT,
+                description=json.dumps({
+                    "uri": f"entities/{entity_id.split('/')[-1]}",
+                    "graph_type_uris": graph_type_uris,
+                    "select": select,
+                    "options": options
+                }),
+                items=[{"objectUri": f"entities/{entity_id.split('/')[-1]}"}]
             )
         except Exception as log_error:
             logger.error(f"Activity logging failed for get_entity_parents: {str(log_error)}")
