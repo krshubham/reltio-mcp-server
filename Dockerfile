@@ -42,6 +42,7 @@ ENV PYTHONPATH=/app
 
 # Set environment variables for host binding
 ENV UVICORN_HOST=0.0.0.0
+ENV HOST=0.0.0.0
 
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
