@@ -10,9 +10,9 @@ from typing import List, Dict, Any, Optional
 from mcp.server.fastmcp import FastMCP
 
 # Import server name from defines
-from src.env import RELTIO_SERVER_NAME, RELTIO_TENANT
+from env import RELTIO_SERVER_NAME, RELTIO_TENANT
 # Import tools from separate modules
-from src.tools.entity import (
+from tools.entity import (
     get_entity_details, 
     update_entity_attributes, 
     get_entity_matches, 
@@ -27,7 +27,7 @@ from src.tools.entity import (
     get_entity_hops,
     get_entity_parents
 )
-from src.tools.match import (
+from tools.match import (
     find_matches_by_match_score, 
     find_matches_by_confidence, 
     get_total_matches, 
@@ -35,10 +35,10 @@ from src.tools.match import (
     find_potential_matches,
     get_potential_match_apis
 )
-from src.tools.relation import get_relation_details, create_relationships, delete_relation, get_entity_relations, search_relations
-from src.tools.search import search_entities
-from src.tools.system import list_capabilities, health_check
-from src.tools.tenant_config import (
+from tools.relation import get_relation_details, create_relationships, delete_relation, get_entity_relations, search_relations
+from tools.search import search_entities
+from tools.system import list_capabilities, health_check
+from tools.tenant_config import (
     get_business_configuration,
     get_tenant_permissions_metadata,
     get_tenant_metadata,
@@ -50,11 +50,11 @@ from src.tools.tenant_config import (
     get_graph_type_definition,
     get_grouping_type_definition
 )
-from src.tools.activity import get_merge_activities, check_user_activity
-from src.tools.interaction import get_entity_interactions, create_interactions
-from src.tools.lookup import rdm_lookups_list
-from src.tools.user import get_users_by_role_and_tenant, get_users_by_group
-from src.tools.workflow import (
+from tools.activity import get_merge_activities, check_user_activity
+from tools.interaction import get_entity_interactions, create_interactions
+from tools.lookup import rdm_lookups_list
+from tools.user import get_users_by_role_and_tenant, get_users_by_group
+from tools.workflow import (
     get_user_workflow_tasks,
     reassign_workflow_task,
     get_possible_assignees,

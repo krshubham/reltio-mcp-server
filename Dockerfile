@@ -1,44 +1,53 @@
-# Stage 1: Build dependencies with uv
-FROM ghcr.io/astral-sh/uv:python3.13-alpine AS uv
+# Use a Python image with uv pre-installed
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
+# Setup a non-root user
+RUN groupadd --system --gid 999 appuser \
+ && useradd --system --gid 999 --uid 999 --create-home appuser
+
+# Install the project into `/app`
 WORKDIR /app
 
-# Copy the requirements and source code
-COPY pyproject.toml /app/
-COPY uv.lock /app/
-COPY main.py /app/
-COPY .env /app/.env
-COPY src /app/src
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
 
-# Install exact dependencies from uv.lock, producing a local .venv folder with a virtual environment
+# Copy from the cache instead of linking since it's a mounted volume
+ENV UV_LINK_MODE=copy
+
+# Omit development dependencies
+ENV UV_NO_DEV=1
+
+# Ensure installed tools can be executed out of the box
+ENV UV_TOOL_BIN_DIR=/usr/local/bin
+
+# Copy project configuration files
+COPY pyproject.toml uv.lock ./
+
+# Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable
+    uv sync --locked --no-install-project
 
+# Then, add the rest of the project source code and install it
+# Installing separately from its dependencies allows optimal layer caching
+COPY .env main.py src/ ./
 
-# Stage 2: Final runtime image
-FROM python:3.13-alpine
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked && uv pip install -e .
 
-# Create application user and set up environment
-RUN adduser -D -u 1001 -h /app appuser && \
-    chown -R appuser:appuser /app
-
-WORKDIR /app
-
-# Copy application files from build stage
-COPY --from=uv --chown=appuser:appuser /app/.venv /app/.venv
-COPY --from=uv --chown=appuser:appuser /app /app
-
-# Set environment variables
+# Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH=/app \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
 
-# Switch to non-root user
+# Add current directory to Python path
+ENV PYTHONPATH=/app
+
+# Set environment variables for host binding
+ENV UVICORN_HOST=0.0.0.0
+
+# Reset the entrypoint, don't invoke `uv`
+ENTRYPOINT []
+
+# Use the non-root user to run our application
 USER appuser
 
-EXPOSE 8000
-
-ENTRYPOINT ["python", "main.py"]
+# Run the application
+CMD ["python", "main.py"]

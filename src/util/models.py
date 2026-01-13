@@ -6,7 +6,7 @@ and tools.
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 from typing_extensions import Annotated
 from typing import List, Optional, Dict, Any
-from src.constants import (
+from constants import (
     ENTITY_ID_PATTERN, 
     TENANT_ID_PATTERN, 
     MAX_RESULTS_LIMIT, 
@@ -15,8 +15,8 @@ from src.constants import (
     MAX_QUERY_LENGTH,
     RELATION_ID_PATTERN
 )
-from src.env import RELTIO_TENANT
-from src.util.api import extract_entity_id, extract_relation_id, extract_change_request_id
+from env import RELTIO_TENANT
+from util.api import extract_entity_id, extract_relation_id, extract_change_request_id
 import re
 
 # Entity-related models

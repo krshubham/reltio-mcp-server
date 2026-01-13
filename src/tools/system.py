@@ -1,8 +1,8 @@
 import logging
 import time
 
-from src.env import RELTIO_SERVER_NAME
-from src.util.api import create_error_response
+from env import RELTIO_SERVER_NAME
+from util.api import create_error_response
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

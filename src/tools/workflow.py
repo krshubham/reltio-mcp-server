@@ -2,17 +2,17 @@ import logging
 from typing import List, Dict, Any, Optional
 import yaml
 import requests
-from src.constants import ACTIVITY_CLIENT
-from src.env import RELTIO_TENANT, RELTIO_ENVIRONMENT
-from src.util.api import (
+from constants import ACTIVITY_CLIENT
+from env import RELTIO_TENANT, RELTIO_ENVIRONMENT
+from util.api import (
     create_error_response, 
     validate_connection_security,
     http_request
 )
-from src.util.auth import get_reltio_headers
-from src.util.activity_log import ActivityLog
-from src.util.models import GetPossibleAssigneesRequest, RetrieveTasksRequest, GetTaskDetailsRequest, StartProcessInstanceRequest, ExecuteTaskActionRequest
-from src.tools.util import ActivityLogLabel
+from util.auth import get_reltio_headers
+from util.activity_log import ActivityLog
+from util.models import GetPossibleAssigneesRequest, RetrieveTasksRequest, GetTaskDetailsRequest, StartProcessInstanceRequest, ExecuteTaskActionRequest
+from tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

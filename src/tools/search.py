@@ -1,13 +1,13 @@
 import json
 import logging
 import yaml
-from src.constants import ACTIVITY_CLIENT
-from src.env import RELTIO_TENANT
-from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
-from src.util.auth import get_reltio_headers
-from src.util.models import EntitySearchRequest
-from src.util.activity_log import ActivityLog
-from src.tools.util import ActivityLogLabel, create_search_activity_description, simplify_reltio_attributes
+from constants import ACTIVITY_CLIENT
+from env import RELTIO_TENANT
+from util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
+from util.auth import get_reltio_headers
+from util.models import EntitySearchRequest
+from util.activity_log import ActivityLog
+from tools.util import ActivityLogLabel, create_search_activity_description, simplify_reltio_attributes
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

@@ -10,6 +10,7 @@ dependencies = [
     "requests>=2.32.3",
     "urllib3>=2.4.0",
     "pyyaml",
+    "python-dotenv",
 ]
 
 [project.optional-dependencies]
@@ -19,6 +20,10 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.10.0",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,8 +1,8 @@
 import uuid
 from typing import Dict, Any
 import logging
-from src.constants import ACTIVITY_LOG_LABEL
-from src.util.api import get_reltio_url, get_reltio_headers, http_request, validate_connection_security, create_error_response
+from constants import ACTIVITY_LOG_LABEL
+from util.api import get_reltio_url, get_reltio_headers, http_request, validate_connection_security, create_error_response
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

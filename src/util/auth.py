@@ -1,11 +1,11 @@
 import json
 import requests
 import requests
-from src.constants import HEADER_SOURCE_TAG
-from src.env import RELTIO_CLIENT_BASIC_TOKEN, RELTIO_AUTH_SERVER
+from constants import HEADER_SOURCE_TAG
+from env import RELTIO_CLIENT_BASIC_TOKEN, RELTIO_AUTH_SERVER
 
 
-from src.env import RELTIO_CLIENT_BASIC_TOKEN, RELTIO_AUTH_SERVER
+from env import RELTIO_CLIENT_BASIC_TOKEN, RELTIO_AUTH_SERVER
 
 def get_access_token():
     """Get Reltio access token using environment variables

@@ -5,10 +5,10 @@ from typing import Optional, Dict, Any, Union
 import requests
 from requests.exceptions import HTTPError
 
-from src.constants import ERROR_CODES, REQUIRE_TLS, ALLOWED_ORIGINS, DEFAULT_TIMEOUT
-from src.env import RELTIO_ENVIRONMENT
-from src.util.auth import get_reltio_headers
-from src.util.exceptions import SecurityError, TimeoutError
+from constants import ERROR_CODES, REQUIRE_TLS, ALLOWED_ORIGINS, DEFAULT_TIMEOUT
+from env import RELTIO_ENVIRONMENT
+from util.auth import get_reltio_headers
+from util.exceptions import SecurityError, TimeoutError
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

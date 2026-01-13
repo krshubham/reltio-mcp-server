@@ -1,17 +1,17 @@
 import logging
 import yaml
 import time
-from src.constants import ACTIVITY_CLIENT
-from src.env import RELTIO_TENANT, RELTIO_AUTH_SERVER
-from src.util.api import (
+from constants import ACTIVITY_CLIENT
+from env import RELTIO_TENANT, RELTIO_AUTH_SERVER
+from util.api import (
     http_request, 
     create_error_response, 
     validate_connection_security,
     get_reltio_url
 )
-from src.util.auth import get_reltio_headers
-from src.util.activity_log import ActivityLog
-from src.tools.util import ActivityLogLabel
+from util.auth import get_reltio_headers
+from util.activity_log import ActivityLog
+from tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

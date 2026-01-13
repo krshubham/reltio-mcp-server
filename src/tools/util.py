@@ -2,7 +2,7 @@ import logging
 from typing import List, Dict, Any, Optional
 import enum
 
-from src.constants import RELEVANCE_SCORE_NOT_AVAILABLE
+from constants import RELEVANCE_SCORE_NOT_AVAILABLE
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")

@@ -8,14 +8,14 @@ from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 import yaml
 import time
-from src.constants import ACTIVITY_CLIENT, MAX_RESULTS_LIMIT
-from src.env import RELTIO_TENANT
-from src.util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
-from src.util.auth import get_reltio_headers
-from src.util.exceptions import SecurityError
-from src.util.models import MergeActivitiesRequest
-from src.util.activity_log import ActivityLog
-from src.tools.util import ActivityLogLabel
+from constants import ACTIVITY_CLIENT, MAX_RESULTS_LIMIT
+from env import RELTIO_TENANT
+from util.api import get_reltio_url, http_request, create_error_response, validate_connection_security
+from util.auth import get_reltio_headers
+from util.exceptions import SecurityError
+from util.models import MergeActivitiesRequest
+from util.activity_log import ActivityLog
+from tools.util import ActivityLogLabel
 
 # Configure logging
 logger = logging.getLogger("mcp.server.reltio")
