@@ -69,7 +69,7 @@ from tools.workflow import (
 logger = logging.getLogger("mcp.server.reltio")
 
 # Initialize MCP server
-mcp = FastMCP(RELTIO_SERVER_NAME)
+mcp = FastMCP(RELTIO_SERVER_NAME, host="0.0.0.0", port=9123)
 
 # Register tools with the MCP server
 @mcp.tool()
