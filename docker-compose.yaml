@@ -5,6 +5,6 @@ services:
       context: ./
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - 9123:9123
     env_file:
       - .env
